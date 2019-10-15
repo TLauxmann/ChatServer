@@ -1,9 +1,12 @@
 {
-  "name": "simple chat server",
+  "name": "simple-chat-server",
   "version": "0.0.1",
   "description": "cloud computing ws19 exercise1",
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^2.3.0"
+  },
+  "scripts": {
+    "start": "node app.js"
   }
 }
