@@ -6,7 +6,6 @@ $(document).ready(function() {
 
         //enter message
         $('form').submit(function(e) {
-
             e.preventDefault(); // prevents page reloading
             socket.emit('chat message', $('#m').val());
             $('#m').val('');
@@ -27,7 +26,7 @@ $(document).ready(function() {
 
         socket.on('validLogin', function(usersOnline) {
             usersOnline.forEach(function(username) {
-                $("#onlineList").append("<li id=" + username + ">" + username + "</li>");
+                $("#onlineList").append(`<li id= ${username} ><button> ${username} </button></li>`);
             });
             $("#login").hide();
             $("#mainChat").show();
@@ -38,7 +37,7 @@ $(document).ready(function() {
         });
 
         socket.on('userJoint', function(username) {
-            $("#onlineList").append("<li id=" + username + ">" + username + "</li>");
+            $("#onlineList").append(`<li id= ${username} ><button> ${username} </button></li>`);
         });
 
         socket.on('userLeft', function(username) {

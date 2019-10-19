@@ -13,13 +13,15 @@ http.listen(3000, function() {
     console.log('listening on *:3000');
 });
 
-var usersOnline = []
+var usersOnline = new Map();
 
 io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
-        usersOnline.splice(usersOnline.indexOf(socket.username), 1);
+        usersOnline.delete(socket.username);
         socket.broadcast.emit('userLeft', socket.username) // to all others
+
+        console.log(usersOnline);
     });
 
     socket.on('chat message', function(msg) {
@@ -28,13 +30,13 @@ io.on('connection', function(socket) {
 
     //user Login
     socket.on('checkName', function(username) {
-        if (!usersOnline.includes(username)) {
-
+        if (!usersOnline.has(username)) {
             socket.username = username;
-            usersOnline.push(username);
-
-            socket.emit('validLogin', usersOnline);
+            usersOnline.set(username, socket.id);
+            socket.emit('validLogin', Array.from(usersOnline.keys()));
             socket.broadcast.emit('userJoint', username) // to all others
+
+            console.log(usersOnline);
         } else {
             socket.emit('invalidLogin');
         }
