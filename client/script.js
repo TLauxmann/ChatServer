@@ -10,9 +10,23 @@ $(document).ready(function() {
         return false;
     });
 
-    //recieve message
-    socket.on('chat message', function(msg, username) {
-        $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + ": " + msg));
+    //recieve message and check for file   
+    socket.on('chat message', function (msg, username) {
+        /*if ((msg.split(": ",2)[1]).substr(0,4) == "data") {
+            if ((msg.split(": ",2)[1]).substr(5,5) == "image") {
+                $('#messages').append('<li> <p>' + msg.split(": ",2)[0] + ' has sent an image: <img height="300" width="300" src="' + msg.split(": ",2)[1] + '">');
+            } else if ((msg.split(": ",2)[1]).substr(5,4) == "text") {
+                var decodedText = b64DecodeUnicode((msg.split(": ",2)[1]).split(";base64,",2)[1]);
+                $('#messages').append('<li> <p>' + msg.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
+            } else if ((msg.split(": ",2)[1]).substr(5,11) == "application") {
+                if ((msg.split(": ",2)[1]).substr(17,12) == "octet-stream") {
+                    var decodedText = b64DecodeUnicode((msg.split(": ",2)[1]).split(";base64,",2)[1]);
+                    $('#messages').append('<li> <p>' + msg.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
+                }
+            }
+        } else {*/
+             $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + ": " + msg));
+        //}
     });
 
     //checks if name already exists
@@ -43,7 +57,6 @@ $(document).ready(function() {
         $("#" + username).remove();
         $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + " left the chatroom"));
     });
-    
     
     $('#sendFile').click(function(e){
         e.preventDefault();
