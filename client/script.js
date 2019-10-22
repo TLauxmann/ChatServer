@@ -43,6 +43,33 @@ $(document).ready(function() {
         $("#" + username).remove();
         $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + " left the chatroom"));
     });
+    
+    
+    $('#sendFile').click(function(e){
+        e.preventDefault();
+        var files = document.getElementById('file').files;
+        if (files.length > 0) {
+            getBase64(files[0]);
+        }
+    });
+
+    function getBase64(file) {
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            socket.emit('chat message', reader.result);
+        };
+        reader.onerror = function (error) {
+            console.log('Error: ', error);
+        };
+    }
+    
+    function b64DecodeUnicode(str) {
+        // Going backwards: from bytestream, to percent-encoding, to original string.
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
 
 });
 

@@ -22,13 +22,18 @@
     <!-- mainChat gets visible after login -->
     <div id="mainChat" style="display:none">
         <ol id="onlineList">
-            <li>Users online</li>
+            <h3>Users online</h3>
         </ol>
-
-        <ul id="messages"></ul>
-        <form action="">
-            <input id="m" autocomplete="off" /><button>Send</button>
-        </form>
+        
+        <div id="mBox">
+            <ul id="messages"></ul>
+            <form action="">
+                <input id="m" autocomplete="off" />
+                <button>Send</button>
+                <input id="file" type="file"/>
+                <button id= "sendFile">Send File</button>
+            </form>
+        </div>
     </div>
 
 </body>
