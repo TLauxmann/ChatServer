@@ -25,7 +25,23 @@ io.on('connection', function(socket) {
     });
 
     socket.on('chat message', function(msg) {
-        io.emit('chat message', msg, socket.username);
+        var data = msg.trim();
+        console.log(data.substr(0,3));
+        //check for private msg
+        if(data.substr(0,3) === '/p '){
+            console.log('------------test');
+           data = data.substr(3);
+            var ind = data.indexOf(' ');
+            var name = data.substr(0, ind);
+            console.log(name);
+            data = data.substr(ind+1);
+            if (name in usersOnline) {
+                usersOnline[name].emit('private message', msg, socket.username);
+                console.log("private");
+            }
+        } else {
+            io.emit('chat message', msg, socket.username);
+        }
     });
 
     //user Login

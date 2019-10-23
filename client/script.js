@@ -29,6 +29,10 @@ $(document).ready(function() {
         //}
     });
 
+    socket.on('private message', function (msg, username){ 
+        $('#messages').append($('<li class="private">').text(getCurrentTimestamp() + " " + username + ": " + msg));
+    });
+    
     //checks if name already exists
     $('#submitName').click(function() {
         if ($("#username").val()) {
