@@ -2,31 +2,49 @@ $(document).ready(function() {
 
     var socket = io();
 
-    //enter message
+    //enter message and/or upload file
     $('form').submit(function(e) {
-        e.preventDefault(); // prevents page reloading
-        socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
+        e.preventDefault();
+        const files = document.getElementById('file').files;
+        if (files.length > 0) {
+            const reader = new FileReader();
+            reader.readAsDataURL(files[0]);
+            reader.onload = function () {
+                socket.emit('chat message with file', $('#m').val(), reader.result);
+                $('#m').val('');
+                $('#file').val('');
+            };
+            reader.onerror = function (error) {
+                console.log('Error: ', error);
+            };
+        } else {
+            socket.emit('chat message', $('#m').val());
+            $('#m').val('');
+        }
     });
 
     //recieve message and check for file   
-    socket.on('chat message', function (msg, username) {
-        /*if ((msg.split(": ",2)[1]).substr(0,4) == "data") {
-            if ((msg.split(": ",2)[1]).substr(5,5) == "image") {
-                $('#messages').append('<li> <p>' + msg.split(": ",2)[0] + ' has sent an image: <img height="300" width="300" src="' + msg.split(": ",2)[1] + '">');
-            } else if ((msg.split(": ",2)[1]).substr(5,4) == "text") {
-                var decodedText = b64DecodeUnicode((msg.split(": ",2)[1]).split(";base64,",2)[1]);
-                $('#messages').append('<li> <p>' + msg.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
-            } else if ((msg.split(": ",2)[1]).substr(5,11) == "application") {
-                if ((msg.split(": ",2)[1]).substr(17,12) == "octet-stream") {
-                    var decodedText = b64DecodeUnicode((msg.split(": ",2)[1]).split(";base64,",2)[1]);
-                    $('#messages').append('<li> <p>' + msg.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
+    socket.on('chat message', function (msg, username, file) {
+        if (file && file.substr(0,4) == "data") {
+            var fileType = file.split(":")[1].substr(0, 5);
+            if (fileType == "image") {
+                appendMedia(username, file, msg, "img");
+            } else if (fileType == "video"){
+                appendMedia(username, file, msg, "video");
+            } else if (fileType == "audio") {
+                appendMedia(username, file, msg, "audio");
+            }/* else if ((file.split(": ",2)[1]).substr(5,4) == "text") {
+                var decodedText = b64DecodeUnicode((file.split(": ",2)[1]).split(";base64,",2)[1]);
+                $('#messages').append('<li> <p>' + file.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
+            } else if ((file.split(": ",2)[1]).substr(5,11) == "application") {
+                if ((file.split(": ",2)[1]).substr(17,12) == "octet-stream") {
+                    var decodedText = b64DecodeUnicode((file.split(": ",2)[1]).split(";base64,",2)[1]);
+                    $('#messages').append('<li> <p>' + file.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
                 }
-            }
-        } else {*/
+            }*/
+        } else {
              $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + ": " + msg));
-        //}
+        }
     });
 
     socket.on('private message', function (msg, username){ 
@@ -61,26 +79,7 @@ $(document).ready(function() {
         $("#" + username).remove();
         $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + " left the chatroom"));
     });
-    
-    $('#sendFile').click(function(e){
-        e.preventDefault();
-        var files = document.getElementById('file').files;
-        if (files.length > 0) {
-            getBase64(files[0]);
-        }
-    });
-
-    function getBase64(file) {
-        var reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            socket.emit('chat message', reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
-    }
-    
+      
     function b64DecodeUnicode(str) {
         // Going backwards: from bytestream, to percent-encoding, to original string.
         return decodeURIComponent(atob(str).split('').map(function(c) {
@@ -89,6 +88,10 @@ $(document).ready(function() {
     }
 
 });
+
+function appendMedia(username, file, msg, mediaType) {
+    $('#messages').append(`<li> ${getCurrentTimestamp()} ${username}: <${mediaType} height="300" width="300" src="${file}" controls > ${mediaType == 'img' ? '' : `<p>Your browser doesnt support HTML ${mediaType}.</p>`} </${mediaType}><br><p>${msg}</p>`);
+}
 
 function getCurrentTimestamp() {
     var today = new Date();

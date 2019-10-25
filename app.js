@@ -40,9 +40,14 @@ io.on('connection', function(socket) {
                 console.log("private");
             }
         } else {
-            io.emit('chat message', msg, socket.username);
+            io.emit('chat message', msg, socket.username, '');
         }
     });
+
+    socket.on('chat message with file', function (msg, file) {
+        io.emit('chat message', msg, socket.username, file);
+    });
+
 
     //user Login
     socket.on('checkName', function(username) {
