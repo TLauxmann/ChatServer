@@ -5,12 +5,17 @@ $(document).ready(function() {
     //enter message and/or upload file
     $('form').submit(function(e) {
         e.preventDefault();
+        const writingToList = [];
+        $("#writingToList").children().each(function (index) {
+            writingToList.push($(this).attr("id"))
+        });
         const files = document.getElementById('file').files;
+        //check if message has file attached
         if (files.length > 0) {
             const reader = new FileReader();
             reader.readAsDataURL(files[0]);
             reader.onload = function () {
-                socket.emit('chat message with file', $('#m').val(), reader.result);
+                socket.emit('chat message', $('#m').val(), reader.result, writingToList);
                 $('#m').val('');
                 $('#file').val('');
             };
@@ -18,21 +23,34 @@ $(document).ready(function() {
                 console.log('Error: ', error);
             };
         } else {
-            socket.emit('chat message', $('#m').val());
+            socket.emit('chat message', $('#m').val(),'', writingToList);
             $('#m').val('');
         }
     });
 
     //recieve message and check for file   
-    socket.on('chat message', function (msg, username, file) {
+    socket.on('chat message', function (msg, username, file, sendTo) {
+
+        //create String for tooltip
+        var sendToList = '<br><div class= "tooltip">Send to<span class= "tooltiptext">';
+        if (sendTo.length) {
+            sendTo.forEach(function (chatpartner) {
+                sendToList = sendToList.concat(chatpartner + "<br>");
+            });
+            sendToList = sendToList.concat("</span ></div>");
+        }else{
+            sendToList = "";
+        }
+
+        //check file
         if (file && file.substr(0,4) == "data") {
-            var fileType = file.split(":")[1].substr(0, 5);
+            const fileType = file.split(":")[1].substr(0, 5);
             if (fileType == "image") {
-                appendMedia(username, file, msg, "img");
+                appendMedia(username, file, msg, "img", sendToList);
             } else if (fileType == "video"){
-                appendMedia(username, file, msg, "video");
+                appendMedia(username, file, msg, "video", sendToList);
             } else if (fileType == "audio") {
-                appendMedia(username, file, msg, "audio");
+                appendMedia(username, file, msg, "audio", sendToList);
             }/* else if ((file.split(": ",2)[1]).substr(5,4) == "text") {
                 var decodedText = b64DecodeUnicode((file.split(": ",2)[1]).split(";base64,",2)[1]);
                 $('#messages').append('<li> <p>' + file.split(": ",2)[0] + ' has sent a text file: ' + decodedText + '</p>');
@@ -43,7 +61,7 @@ $(document).ready(function() {
                 }
             }*/
         } else {
-             $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + ": " + msg));
+            $('#messages').append(`<li> ${getCurrentTimestamp()} ${username}: ${msg} ${sendToList} </li>`);
         }
     });
 
@@ -60,7 +78,7 @@ $(document).ready(function() {
 
     socket.on('validLogin', function(usersOnline) {
         usersOnline.forEach(function(username) {
-            $("#onlineList").append(`<li id= ${username} ><button> ${username} </button></li>`);
+            $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         });
         $("#login").hide();
         $("#mainChat").show();
@@ -71,12 +89,16 @@ $(document).ready(function() {
     });
 
     socket.on('userJoint', function(username) {
-        $("#onlineList").append(`<li id= ${username} ><button> ${username} </button></li>`);
+        $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });
 
     socket.on('userLeft', function(username) {
-        $("#" + username).remove();
+        var listClass = $("." + username);
+        listClass[0].remove();
+        if(listClass[1]){
+            listClass[1].remove();
+        }
         $('#messages').append($('<li>').text(getCurrentTimestamp() + " " + username + " left the chatroom"));
     });
       
@@ -89,8 +111,8 @@ $(document).ready(function() {
 
 });
 
-function appendMedia(username, file, msg, mediaType) {
-    $('#messages').append(`<li> ${getCurrentTimestamp()} ${username}: <${mediaType} height="300" width="300" src="${file}" controls > ${mediaType == 'img' ? '' : `<p>Your browser doesnt support HTML ${mediaType}.</p>`} </${mediaType}><br><p>${msg}</p>`);
+function appendMedia(username, file, msg, mediaType, sendToList) {
+    $('#messages').append(`<li> ${getCurrentTimestamp()} ${username}: <${mediaType} height="300" width="300" src="${file}" controls > ${mediaType == 'img' ? '' : `<p>Your browser doesnt support HTML ${mediaType}.</p>`} </${mediaType}><br><p>${msg}</p> ${sendToList}</li>`);
 }
 
 function getCurrentTimestamp() {
@@ -99,4 +121,14 @@ function getCurrentTimestamp() {
     var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
     var dateTime = date + ' ' + time;
     return dateTime;
+}
+
+function addToWritingList(username){
+    if (!$("#" + username).length){
+        $("#writingToList").append(`<li id=${username} class=${username} ><button onclick="deleteElementById('${username}')" > ${username} </button></li>`);
+    }
+}
+
+function deleteElementById(id){
+    $("#" + id).remove();
 }
