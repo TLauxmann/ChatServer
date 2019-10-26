@@ -20,44 +20,31 @@ io.on('connection', function(socket) {
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
         socket.broadcast.emit('userLeft', socket.username) // to all others
-
-        console.log(usersOnline);
     });
 
-    socket.on('chat message', function(msg) {
-        var data = msg.trim();
-        console.log(data.substr(0,3));
-        //check for private msg
-        if(data.substr(0,3) === '/p '){
-            console.log('------------test');
-           data = data.substr(3);
-            var ind = data.indexOf(' ');
-            var name = data.substr(0, ind);
-            console.log(name);
-            data = data.substr(ind+1);
-            if (name in usersOnline) {
-                usersOnline[name].emit('private message', msg, socket.username);
-                console.log("private");
-            }
+    socket.on('chat message', function (msg, file, writingToList) {
+        if (writingToList.length) {
+            //send to selected users
+            writingToList.forEach(function (username) {
+                io.to(usersOnline.get(username)).emit('chat message', msg, socket.username, file, writingToList);
+            });
+            //and to yourself
+            io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
         } else {
-            io.emit('chat message', msg, socket.username, '');
+            io.emit('chat message', msg, socket.username, file, writingToList);
         }
     });
-
-    socket.on('chat message with file', function (msg, file) {
-        io.emit('chat message', msg, socket.username, file);
-    });
-
 
     //user Login
     socket.on('checkName', function(username) {
         if (!usersOnline.has(username)) {
             socket.username = username;
             usersOnline.set(username, socket.id);
-            socket.emit('validLogin', Array.from(usersOnline.keys()));
+            //remove own name
+            var uoList = Array.from(usersOnline.keys());
+            uoList.splice(uoList.indexOf(socket.username), 1)
+            socket.emit('validLogin', uoList);
             socket.broadcast.emit('userJoint', username) // to all others
-
-            console.log(usersOnline);
         } else {
             socket.emit('invalidLogin');
         }
