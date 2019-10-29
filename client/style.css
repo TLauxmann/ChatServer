@@ -67,6 +67,10 @@ h1, h3 {
     margin-bottom: 15px;
 }
 
+.userJointLeft {
+    background-color: rgb(124, 252, 252) !important;
+}
+
 /* tooltip*/
 .tooltip {
   position: relative;
