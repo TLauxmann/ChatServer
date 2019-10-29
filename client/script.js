@@ -37,14 +37,13 @@ $(document).ready(function() {
     //recieve message and check for file   
     socket.on('chat message', function (msg, username, file, sendTo) {
         //create String for tooltip
-        var sendToList = '<br><div class= "tooltip">sent to<span class= "tooltiptext">';
+        var sendToList = "";
         if (sendTo.length) {
+            sendToList = '<br><div class= "tooltip">sent to<span class= "tooltiptext">'
             sendTo.forEach(function (chatpartner) {
                 sendToList = sendToList.concat(chatpartner + "<br>");
             });
             sendToList = sendToList.concat("</span ></div>");
-        }else{
-            sendToList = "";
         }
 
         //check file
