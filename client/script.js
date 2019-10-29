@@ -6,9 +6,15 @@ $(document).ready(function() {
     $('form').submit(function(e) {
         e.preventDefault();
         const writingToList = [];
-        $("#writingToList").children().each(function (index) {
-            writingToList.push($(this).attr("id"))
+        $('.chosen').each(function(index) {
+            writingToList.push($(this).attr("id"));
+            console.log($(this).attr("id").value);
+            console.log(writingToList.length);
+            console.log(JSON.stringify(writingToList));
         });
+       /* $('.chosen').each(function (index) {
+            writingToList.push($(this))
+        });*/
         const files = document.getElementById('file').files;
         //check if message has file attached
         if (files.length > 0) {
@@ -24,6 +30,7 @@ $(document).ready(function() {
             };
         } else {
             socket.emit('chat message', $('#m').val(),'', writingToList);
+            console.log(writingToList.length);
             $('#m').val('');
         }
     });
@@ -32,9 +39,14 @@ $(document).ready(function() {
     socket.on('chat message', function (msg, username, file, sendTo) {
 
         //create String for tooltip
-        var sendToList = '<br><div class= "tooltip">Send to<span class= "tooltiptext">';
+        var sendToList = '<br><div class= "tooltip">sent to<span class= "tooltiptext">';
+        console.log("length: " + sendTo.length);
+        console.log(JSON.stringify(sendTo));
         if (sendTo.length) {
             sendTo.forEach(function (chatpartner) {
+                console.log(sendTo.length);
+                /*console.log(chatpartner.value);
+                console.log(chatpartner.data);*/
                 sendToList = sendToList.concat(chatpartner + "<br>");
             });
             sendToList = sendToList.concat("</span ></div>");
@@ -63,10 +75,6 @@ $(document).ready(function() {
         } else {
             $('#messages').append(`<li> ${getCurrentTimestamp()} ${username}: ${msg} ${sendToList} </li>`);
         }
-    });
-
-    socket.on('private message', function (msg, username){ 
-        $('#messages').append($('<li class="private">').text(getCurrentTimestamp() + " " + username + ": " + msg));
     });
     
     //checks if name already exists
@@ -124,8 +132,18 @@ function getCurrentTimestamp() {
 }
 
 function addToWritingList(username){
-    if (!$("#" + username).length){
+   /* if (!$("#" + username).length){
         $("#writingToList").append(`<li id=${username} class=${username} ><button onclick="deleteElementById('${username}')" > ${username} </button></li>`);
+    } */
+    var button = $("." + username + " button");
+    if (button.hasClass('chosen')) {
+        button.css('background-color', 'lightgrey');
+        button.removeClass('chosen');
+        button.removeAttr('id');
+    } else {
+        button.css('background-color', 'lightgreen');
+        button.addClass('chosen');
+        button.attr('id', username);
     }
 }
 
