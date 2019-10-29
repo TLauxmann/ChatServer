@@ -125,10 +125,6 @@ function addToWritingList(username){
     }
 }
 
-function deleteElementById(id){
-    $("#" + id).remove();
-}
-
 function checkInputForTags(input){
     var regularExp = /(<script(\s|\S)*?<\/script>)|(<style(\s|\S)*?<\/style>)|(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)/g;
     return regularExp.test(input);
