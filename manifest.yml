@@ -1,0 +1,5 @@
+---
+applications:
+- name: chat-into-sky
+  memory: 512M
+  instances: 1
