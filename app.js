@@ -11,7 +11,7 @@ app.use('/client', express.static(__dirname + '/client'));
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+http.listen(port, () => {
   console.log('Server running on port: %d', port);
 });
 
