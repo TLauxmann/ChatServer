@@ -1,6 +1,7 @@
 $(document).ready(function() {
 
     var socket = io();
+    const UPLOADLIMT = 20;
 
     //enter message and/or upload file
     $('form').submit(function(e) {
@@ -17,6 +18,11 @@ $(document).ready(function() {
         //check if message has file attached
         if (files.length > 0) {
             const reader = new FileReader();
+            //check filesize
+            if(files[0].size/1024/1024 > UPLOADLIMT){
+                alert("File size to large!")
+                return;
+            }
             reader.readAsDataURL(files[0]);
             reader.onload = function () {
                 if (checkInputForTags(reader.result)) return;
@@ -68,13 +74,17 @@ $(document).ready(function() {
         if ($("#username").val().length === 0){
             alert("No empty username!");
         } else if ($("#username").val().length > 20){
-            alert("This username is too long!")
+            alert("This username is too long!");
+        } else if (checkInputForTags($("#username").val())){
+            window.location.replace("https://www.polizei.de/Polizei/DE/Einrichtungen/ZAC/zac_node.html#doc25124bodyText1");
         } else {
             socket.emit('checkName', $("#username").val());
         }
     });
 
     socket.on('validLogin', function(usersOnline) {
+        console.log($("#onlineList").html());
+        $("#onlineList").html("");
         usersOnline.forEach(function(username) {
             $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         });
