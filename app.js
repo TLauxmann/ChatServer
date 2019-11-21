@@ -2,6 +2,20 @@ var express = require('express');
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+const LanguageTranslatorV3 = require('ibm-watson/language-translator/v3');
+const { IamAuthenticator } = require('ibm-watson/auth');
+
+const languageTranslator = new LanguageTranslatorV3({
+    version: '2018-05-01',
+    authenticator: new IamAuthenticator({
+        apikey: 'GGccI632myKze1YMkfF_603xVaToXSUHfFjYvmJ60Hdb',
+    }),
+    url: 'https://gateway-fra.watsonplatform.net/language-translator/api',
+});
+
+const identifyParams = {
+    text: "Hallo wie geht es dir?"
+};
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html');
@@ -18,6 +32,8 @@ http.listen(port, () => {
 var usersOnline = new Map();
 
 io.on('connection', function(socket) {
+
+    getTranslation();
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
@@ -53,3 +69,29 @@ io.on('connection', function(socket) {
     });
 
 });
+
+function getTranslation() {
+    languageTranslator.identify(identifyParams)
+        .then(identifiedLanguages => {
+            var identifiedLanguage;
+            identifiedLanguages.result.languages.forEach(function (languageObject) {
+                if (languageObject.confidence < 1 && languageObject.confidence > 0.9) {
+                    identifiedLanguage = languageObject.language;
+                }
+            });
+            const translateParams = {
+                text: identifyParams.text,
+                modelId: identifiedLanguage + "-en",
+            };
+            languageTranslator.translate(translateParams)
+                .then(translationResult => {
+                    console.log(JSON.stringify(translationResult, null, 2));
+                })
+                .catch(err => {
+                    console.log('error:', err);
+                });
+        })
+        .catch(err => {
+            console.log('error:', err);
+        });
+}
