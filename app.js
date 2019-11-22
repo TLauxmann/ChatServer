@@ -2,21 +2,11 @@ var express = require('express');
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
-const LanguageTranslatorV3 = require('ibm-watson/language-translator/v3');
-const { IamAuthenticator } = require('ibm-watson/auth');
 
-const languageTranslator = new LanguageTranslatorV3({
-    version: '2018-05-01',
-    authenticator: new IamAuthenticator({
-        apikey: 'GGccI632myKze1YMkfF_603xVaToXSUHfFjYvmJ60Hdb',
-    }),
-    url: 'https://gateway-fra.watsonplatform.net/language-translator/api',
-});
+//Services
+const languageTranslation = require('./server/HRTTranslation/languageTranslation');
 
-const identifyParams = {
-    text: "Hallo wie geht es dir?"
-};
-
+//start - express, html config
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html');
 });
@@ -28,12 +18,19 @@ const port = process.env.PORT || 3000;
 http.listen(port, () => {
   console.log('Server running on port: %d', port);
 });
+//end - express, html config
 
 var usersOnline = new Map();
 
 io.on('connection', function(socket) {
 
-    getTranslation();
+    const params = {
+        text: "Hallo wie geht es dir?"
+    };
+
+    languageTranslation.languageDetection(params).then(response => {
+        console.log(response);
+    });
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
@@ -69,29 +66,3 @@ io.on('connection', function(socket) {
     });
 
 });
-
-function getTranslation() {
-    languageTranslator.identify(identifyParams)
-        .then(identifiedLanguages => {
-            var identifiedLanguage;
-            identifiedLanguages.result.languages.forEach(function (languageObject) {
-                if (languageObject.confidence < 1 && languageObject.confidence > 0.9) {
-                    identifiedLanguage = languageObject.language;
-                }
-            });
-            const translateParams = {
-                text: identifyParams.text,
-                modelId: identifiedLanguage + "-en",
-            };
-            languageTranslator.translate(translateParams)
-                .then(translationResult => {
-                    console.log(JSON.stringify(translationResult, null, 2));
-                })
-                .catch(err => {
-                    console.log('error:', err);
-                });
-        })
-        .catch(err => {
-            console.log('error:', err);
-        });
-}
