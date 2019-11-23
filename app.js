@@ -22,7 +22,7 @@ var usersOnline = new Map();
 io.on('connection', function(socket) {
 
     //testing translate
-    translate("Was ein krasser Chatserver!")
+    //translate("Was ein krasser Chatserver!")
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
