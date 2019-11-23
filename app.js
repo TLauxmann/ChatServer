@@ -3,9 +3,6 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
-//Services
-const languageTranslation = require('./server/HRTTranslation/languageTranslation');
-
 //start - express, html config
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html');
@@ -24,13 +21,8 @@ var usersOnline = new Map();
 
 io.on('connection', function(socket) {
 
-    const params = {
-        text: "Hallo wie geht es dir?"
-    };
-
-    languageTranslation.languageDetection(params).then(response => {
-        console.log(response);
-    });
+    //testing translate
+    translate("Was ein krasser Chatserver!")
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
@@ -38,6 +30,9 @@ io.on('connection', function(socket) {
     });
 
     socket.on('chat message', function (msg, file, writingToList) {
+
+        // TODO: Hier später Nachricht übersetzen newMsg = translate(msg)
+
         if (writingToList.length) {
             //send to selected users
             writingToList.forEach(function (username) {
@@ -66,3 +61,12 @@ io.on('connection', function(socket) {
     });
 
 });
+
+function translate(incomingMessage){
+
+    const detectObject = {
+        text: incomingMessage
+    };
+    // call https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/hrt-demo/identify-and-translate
+    // mit detectObject
+}

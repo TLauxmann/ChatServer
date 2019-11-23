@@ -8,133 +8,96 @@ const languageTranslator = new LanguageTranslatorV3({
     apikey: 'GGccI632myKze1YMkfF_603xVaToXSUHfFjYvmJ60Hdb',
   }),
   url: 'https://gateway-fra.watsonplatform.net/language-translator/api',
-});
+});  
 
-
-const identifyParams = {
-  text: "Hallo wie geht es dir?"
-};
-
-function getTranslation() {
-  languageTranslator.identify(identifyParams)
-    .then(identifiedLanguages => {
-      var identifiedLanguage;
-      identifiedLanguages.result.languages.forEach(function (languageObject) {
-        if (languageObject.confidence < 1 && languageObject.confidence > 0.9) {
-          identifiedLanguage = languageObject.language;
-        }
-      });
-      const translateParams = {
-        text: identifyParams.text,
-        modelId: identifiedLanguage + "-en",
-      };
-      languageTranslator.translate(translateParams)
-        .then(translationResult => {
-          if (translationResult.status == 200) {
-            console.log(translationResult.result.translations[0].translation);
-            return translationResult.result.translations[0].translation;
-          } else {
-            return "";
-          }
-        })
-        .catch(err => {
-          console.log('error:', err);
-        });
-    })
-    .catch(err => {
-      console.log('error:', err);
-    });
-}
-  
-/**
- * Helper 
- * @param {*} errorMessage 
- * @param {*} defaultLanguage 
- */
-function getTheErrorResponse(errorMessage, defaultLanguage) {
+function getTheErrorResponse(statusCode, errorMessage) {
   return {
-    statusCode: 200,
-    body: {
-      language: defaultLanguage || 'en',
-      errorMessage: errorMessage
-    }
+    statusCode: statusCode,
+    errorMessage: errorMessage,
   };
 }
 
-/**
-  *
-  * main() will be run when the action is invoked
-  *
-  * @param Cloud Functions actions accept a single parameter, which must be a JSON object.
-  *
-  * @return The output of this action, which must be a JSON object.
-  *
-  */
-module.exports = {
+//Callback for reduce operation
+const getHighestConfidenceObject = (acc, cur) => {
+  if (acc.confidence > cur.confidence) {
+    return acc;
+  } else {
+    return cur;
+  }
+};
 
-languageDetection(params) {
 
-  /*
-   * The default language to choose in case of an error
-   */
-  const defaultLanguage = 'en';
+languageDetection(textObject) {
 
   return new Promise(function (resolve, reject) {
 
     try {
 
-      // *******TODO**********
-      // - Call the language identification API of the translation service
-      // see: https://cloud.ibm.com/apidocs/language-translator?code=node#identify-language
-      // - if successful, resolve exactly like shown below with the
-      // language that is most probable the best one in the "language" property
-      // and the confidence it got detected in the "confidence" property
-
-      // in case of errors during the call resolve with an error message according to the pattern 
-      // found in the catch clause below
-	  
-      var identifiedLanguageObject = languageTranslator.identify(params).then(identifiedLanguages => {
-
-
-      //console.log(JSON.stringify(identifiedLanguages, null, 2));
-
-      //Callback for reduce operation
-      var getHighestConfidenceObject = (acc, cur) => {
-        if (acc.confidence > cur.confidence) {
-          return acc;
-        } else {
-          return cur;
+        if(!textObject || !textObject.text){
+          throw new Error('No text to translate!');
         }
-      };
+      
+        languageTranslator.identify(textObject).then(identifiedLanguages => {
 
-      var identifiedLanguageObject = identifiedLanguages.result.languages.filter(function (languageObject){
-        //filter all objects with high confidence
-        return (languageObject.confidence < 1 && languageObject.confidence > 0.9);
-      }).reduce(getHighestConfidenceObject);
+        var identifiedLanguageObject = identifiedLanguages.result.languages.filter(function (languageObject){
+          //filter all objects with high confidence
+          return (languageObject.confidence < 1 && languageObject.confidence > 0.9);
+          //gets language with best confidence or else an empty array
+        }).reduce(getHighestConfidenceObject, []);
 
-        console.log(identifiedLanguageObject);
-      return identifiedLanguageObject
-
-	  })
-	  .catch(err => {
-		console.log('error:', err);
-	  });
-
-      resolve({
-        statusCode: 200,
-        body: {
-          text: params.text, 
-          language: identifiedLanguageObject.language,
-          confidence: identifiedLanguageObject.confidence,
-        },
-        headers: { 'Content-Type': 'application/json' }
+          if (identifiedLanguageObject.language){
+            return resolve(
+              {
+                statusCode: 200,
+                body: {
+                  text: textObject.text,
+                  language: identifiedLanguageObject.language,
+                  confidence: identifiedLanguageObject.confidence,
+                },
+                headers: { 'Content-Type': 'application/json' }
+              });
+          }else{
+            return reject(getTheErrorResponse(404, "Could not detect any language!"));
+          }
+      })
+      .catch(err => {
+        throw err;
       });
 
-
     } catch (err) {
-      console.error('Error while initializing the AI service', err);
-      resolve(getTheErrorResponse('Error while communicating with the language service', defaultLanguage));
+      reject(getTheErrorResponse(400, err.message));
     }
   });
 }
-}
+
+//TODO
+  languageTranslation(translateObject) {
+
+    return new Promise(function (resolve, reject) {
+
+      try {
+
+        languageTranslator.translate(translateObject)
+          .then(translationResult => {
+
+            resolve({
+              statusCode: 200,
+              body: {
+                translations: "<translated text>",
+                words: 1,
+                characters: 11,
+              },
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+          })
+          .catch(err => {
+            console.log('error:', err);
+          });
+
+      } catch (err) {
+        reject(getTheErrorResponse(400, err.message));
+      }
+    });
+
+  }
