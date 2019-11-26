@@ -24,6 +24,18 @@ io.on('connection', function(socket) {
 
     //testing translate
     translate("Was ein krasser Chatserver!")
+    .then(res => 
+    {
+        console.log(res)
+        if (res && res.translations && res.translations[0].translation) {
+            console.log(res.translations[0].translation);
+        } else if(res && res.errorMessage) {
+            console.log(res.errorMessage);
+        } else {
+            console.log("could not translate");
+        }
+    }
+        )
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
@@ -37,16 +49,7 @@ io.on('connection', function(socket) {
 
         console.log($('#checkTranslation input').is(':checked'));
 
-        if (writingToList.length) {
-            //send to selected users
-            writingToList.forEach(function (username) {
-                io.to(usersOnline.get(username)).emit('chat message', msg, socket.username, file, writingToList);
-            });
-            //and to yourself
-            io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
-        } else {
-            io.emit('chat message', msg, socket.username, file, writingToList);
-        }
+        sendMessage(writingToList, msg, socket, file);
     });
 
     //user Login
@@ -66,15 +69,33 @@ io.on('connection', function(socket) {
 
 });
 
-async function translate(incomingMessage){
+function sendMessage(writingToList, msg, socket, file) {
+    if (writingToList.length) {
+        //send to selected users
+        writingToList.forEach(function (username) {
+            io.to(usersOnline.get(username)).emit('chat message', msg, socket.username, file, writingToList);
+        });
+        //and to yourself
+        io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
+    }
+    else {
+        io.emit('chat message', msg, socket.username, file, writingToList);
+    }
+}
+
+    async function translate(incomingMessage){
 
     const url = 'https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/hrt-demo/identify-and-translate';
     const detectObject = {
         text: incomingMessage
     };
 
-    const response = await fetch(url, [detectObject]);
-    const jsonTrans = await response.json();
-    console.log(JSON.stringify(jsonTrans));
-    //return JSON.stringify(jsonTrans.translations)
+    return await fetch(url, {
+        method: 'post',
+        body: JSON.stringify(detectObject),
+        headers: { 'Content-Type': 'application/json' },
+    })
+    .then(res => res.json())
+    .then(json => json)
+
 }
