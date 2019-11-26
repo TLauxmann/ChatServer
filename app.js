@@ -22,33 +22,29 @@ var usersOnline = new Map();
 
 io.on('connection', function(socket) {
 
-    //testing translate
-    translate("Was ein krasser Chatserver!")
-    .then(res => 
-    {
-        console.log(res)
-        if (res && res.translations && res.translations[0].translation) {
-            console.log(res.translations[0].translation);
-        } else if(res && res.errorMessage) {
-            console.log(res.errorMessage);
-        } else {
-            console.log("could not translate");
-        }
-    }
-        )
-
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
         socket.broadcast.emit('userLeft', socket.username) // to all others
+
     });
 
-    socket.on('chat message', function (msg, file, writingToList) {
+    socket.on('chat message',async function (msg, file, writingToList) {
 
         //if checkbox checked
-        //msg = translate(msg);
-
-        console.log($('#checkTranslation input').is(':checked'));
-
+        msg = await translate(msg)
+        .then(res => 
+            {
+                console.log(res)
+                if (res && res.translations && res.translations[0].translation) {
+                    console.log(res.translations[0].translation);
+                    return res.translations[0].translation;
+                } else if(res && res.errorMessage) {
+                    console.log(res.errorMessage);
+                } else {
+                    console.log("could not translate");
+                }
+            }
+                )
         sendMessage(writingToList, msg, socket, file);
     });
 
@@ -97,5 +93,6 @@ function sendMessage(writingToList, msg, socket, file) {
     })
     .then(res => res.json())
     .then(json => json)
+    
 
 }
