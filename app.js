@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+const fetch = require('node-fetch');
 
 //start - express, html config
 app.get('/', function(req, res) {
@@ -22,7 +23,7 @@ var usersOnline = new Map();
 io.on('connection', function(socket) {
 
     //testing translate
-    //translate("Was ein krasser Chatserver!")
+    translate("Was ein krasser Chatserver!")
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
@@ -31,7 +32,10 @@ io.on('connection', function(socket) {
 
     socket.on('chat message', function (msg, file, writingToList) {
 
-        // TODO: Hier später Nachricht übersetzen newMsg = translate(msg)
+        //if checkbox checked
+        //msg = translate(msg);
+
+        console.log($('#checkTranslation input').is(':checked'));
 
         if (writingToList.length) {
             //send to selected users
@@ -62,11 +66,15 @@ io.on('connection', function(socket) {
 
 });
 
-function translate(incomingMessage){
+async function translate(incomingMessage){
 
+    const url = 'https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/hrt-demo/identify-and-translate';
     const detectObject = {
         text: incomingMessage
     };
-    // call https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/hrt-demo/identify-and-translate
-    // mit detectObject
+
+    const response = await fetch(url, [detectObject]);
+    const jsonTrans = await response.json();
+    console.log(JSON.stringify(jsonTrans));
+    //return JSON.stringify(jsonTrans.translations)
 }

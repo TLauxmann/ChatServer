@@ -71,6 +71,10 @@ h1, h3 {
     background-color: rgb(124, 252, 252) !important;
 }
 
+#checkTranslation {
+    float: right;
+}
+
 /* tooltip*/
 .tooltip {
   position: relative;
