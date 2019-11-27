@@ -51,6 +51,10 @@ io.on('connection', function(socket) {
 
     //user Login
     socket.on('checkName', function(username) {
+        //Do not care...Easteregg
+        if (username.toUpperCase() == "WÜRGER" || username.toUpperCase() == "DER WÜRGER"){
+            username = "Robin F";
+        }
         if (!usersOnline.has(username)) {
             socket.username = username;
             usersOnline.set(username, socket.id);
