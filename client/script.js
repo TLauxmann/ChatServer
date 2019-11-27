@@ -14,6 +14,9 @@ $(document).ready(function() {
             writingToList.push($(this).attr("id"));
         });
 
+        //check if user wants to translate text
+        var translate = document.getElementById('checkboxTranslation').checked
+
         const files = document.getElementById('file').files;
         //check if message has file attached
         if (files.length > 0) {
@@ -26,7 +29,7 @@ $(document).ready(function() {
             reader.readAsDataURL(files[0]);
             reader.onload = function () {
                 if (checkInputForTags(reader.result)) return;
-                socket.emit('chat message', $('#m').val(), reader.result, writingToList);
+                socket.emit('chat message', $('#m').val(), reader.result, writingToList, translate);
                 $('#m').val('');
                 $('#file').val('');
             };
@@ -35,7 +38,7 @@ $(document).ready(function() {
             };
         } else {
             if ($('#m').val().length === 0) return;
-            socket.emit('chat message', $('#m').val(),'', writingToList);
+            socket.emit('chat message', $('#m').val(), '', writingToList, translate);
             $('#m').val('');
         }
     });
@@ -67,6 +70,10 @@ $(document).ready(function() {
         } else {
             $('#messages').append(`<li> ${getCurrentTimestamp()} ${username}: ${msg} ${sendToList} </li>`);
         }
+    });
+
+    socket.on('translationFailed', function (msg){
+        alert(msg);
     });
     
     //checks if name already exists

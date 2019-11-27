@@ -28,24 +28,25 @@ io.on('connection', function(socket) {
 
     });
 
-    socket.on('chat message',async function (msg, file, writingToList) {
+    socket.on('chat message', function (msg, file, writingToList, translate) {
 
         //if checkbox checked
-        msg = await translate(msg)
-        .then(res => 
-            {
-                console.log(res)
-                if (res && res.translations && res.translations[0].translation) {
-                    console.log(res.translations[0].translation);
-                    return res.translations[0].translation;
-                } else if(res && res.errorMessage) {
-                    console.log(res.errorMessage);
-                } else {
-                    console.log("could not translate");
+        if (translate){
+            translateMessage(msg)
+            .then(res => 
+                {
+                    if (res && res.translations && res.translations[0].translation) {
+                        sendMessage(writingToList, res.translations[0].translation, socket, file);
+                    } else if(res && res.errorMessage) {
+                        io.to(socket.id).emit('translationFailed', res.errorMessage);
+                    } else {
+                        io.to(socket.id).emit('translationFailed', "Something bad happend during the Translation");                    
+                    }
                 }
+                    )
+            } else{
+                sendMessage(writingToList, msg, socket, file);
             }
-                )
-        sendMessage(writingToList, msg, socket, file);
     });
 
     //user Login
@@ -79,7 +80,7 @@ function sendMessage(writingToList, msg, socket, file) {
     }
 }
 
-    async function translate(incomingMessage){
+    async function translateMessage(incomingMessage){
 
     const url = 'https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/hrt-demo/identify-and-translate';
     const detectObject = {
