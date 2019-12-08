@@ -4,7 +4,7 @@ $(document).ready(function() {
     const UPLOADLIMT = 20;
 
     //enter message and/or upload file
-    $('form').submit(function(e) {
+    $('#sendMsgForm').submit(function(e) {
         e.preventDefault();
 
         if(checkInputForTags($('#m').val())) return;
@@ -76,17 +76,28 @@ $(document).ready(function() {
         alert(msg);
     });
     
-    //checks if name already exists
-    $('#submitName').click(function() {
-        if ($("#username").val().length === 0){
-            alert("No empty username!");
-        } else if ($("#username").val().length > 20){
+    //server check if Login successfull
+    $('#submitLogin').click(function() {
+        socket.emit('checkName', $("#username").val());
+    });
+
+    //checks sign up input
+    $('#submitSignUp').click(function () {
+        if (!$("#suUsername").val() || !$("#suEmail").val() || !$("#suPsw").val() || !$("#suPsw-repeat").val()){
+            //css shows required input
+        } else if ($("#suUsername").val().length > 20) {
             alert("This username is too long!");
-        } else if (checkInputForTags($("#username").val())){
+        } else if (checkInputForTags($("#suUsername").val())) {
             window.location.replace("https://www.polizei.de/Polizei/DE/Einrichtungen/ZAC/zac_node.html#doc25124bodyText1");
-        } else {
-            socket.emit('checkName', $("#username").val());
-        }
+        }else{
+            //compare PWs
+            if ($("#suPsw").val().localeCompare($("#suPsw-repeat").val()) != 0){
+                alert("Passwords do not match!");
+            }else{
+                var signUpData = [$("#suUsername").val(), $("#suPsw").val(), $("#suEmail").val()]
+                socket.emit('signUp', signUpData);
+            }
+        } 
     });
 
     socket.on('validLogin', function(usersOnline) {

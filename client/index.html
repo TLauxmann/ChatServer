@@ -17,7 +17,7 @@
         <h1>Chat Server</h1>
         <input class="startPageInput" type="text" id="username" placeholder="Enter your username" />
         <input class="startPageInput" type="text" id="password" placeholder="Enter your password" />
-        <button class="signUpB" id="submitName">Login</button>
+        <button class="signUpB" id="submitLogin">Login</button>
 
         <!-- Button to open the modal -->
         <button class="signUpB" onclick="document.getElementById('signUp').style.display='block'">Sign Up</button>
@@ -31,23 +31,22 @@
                     <p>Please fill in this form to create an account.</p>
                     <hr id="signUpHr">
                     <label for="username"><b>Username</b></label>
-                    <input class="startPageInput" type="text" placeholder="Enter Username" name="username" required>
+                    <input id="suUsername" class="startPageInput signUpInput" type="text" placeholder="Enter Username" name="username" required>
 
                     <label for="email"><b>Email</b></label>
-                    <input class="startPageInput" type="text" placeholder="Enter Email" name="email" required>
+                    <input id="suEmail" class="startPageInput signUpInput" type="text" placeholder="Enter Email" name="email" required>
         
                     <label for="psw"><b>Password</b></label>
-                    <input class="startPageInput" type="password" placeholder="Enter Password" name="psw" required>
+                    <input id="suPsw" class="startPageInput signUpInput" type="password" placeholder="Enter Password" name="psw" required>
         
                     <label for="psw-repeat"><b>Repeat Password</b></label>
-                    <input class="startPageInput" type="password" placeholder="Repeat Password" name="psw-repeat" required> 
+                    <input id="suPsw-repeat" class="startPageInput signUpInput" type="password" placeholder="Repeat Password" name="psw-repeat" required> 
         
                     <p>By creating an account you agree to our <a href="#" style="color:dodgerblue">Terms & Privacy</a>.</p>
         
                     <div class="clearfix">
-                        <button type="button" onclick="document.getElementById('signUp').style.display='none'"
-                            class="signUpB cancelbtn">Cancel</button>
-                        <button class="signUpB" type="submit" class="signup">Sign Up</button>
+                        <button type="button" onclick="document.getElementById('signUp').style.display='none'" class="signUpB cancelbtn">Cancel</button>
+                        <button id="submitSignUp" class="signUpB signupbtn">Sign Up</button>
                     </div>
                 </div>
             </form>
