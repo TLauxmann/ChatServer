@@ -2,6 +2,7 @@ $(document).ready(function() {
 
     var socket = io();
     const UPLOADLIMT = 20;
+    const PROFILEPICTURESIZE = 5;
 
     //enter message and/or upload file
     $('#sendMsgForm').submit(function(e) {
@@ -24,16 +25,21 @@ $(document).ready(function() {
             //check filesize
             if(files[0].size/1024/1024 > UPLOADLIMT){
                 alert("File size to large!")
+                $('#file').val('');
                 return;
             }
             reader.readAsDataURL(files[0]);
             reader.onload = function () {
-                if (checkInputForTags(reader.result)) return;
+                if (checkInputForTags(reader.result)){
+                    $('#file').val('');
+                    return;
+                }
                 socket.emit('chat message', $('#m').val(), reader.result, writingToList, translate);
                 $('#m').val('');
                 $('#file').val('');
             };
             reader.onerror = function (error) {
+                $('#file').val('');
                 console.log('Error: ', error);
             };
         } else {
@@ -98,6 +104,40 @@ $(document).ready(function() {
                 socket.emit('signUp', signUpData);
             }
         } 
+    });
+
+    $('#profilePictureButton').click(function(){
+        const files = document.getElementById('profilePicture').files;
+
+        if (files.length > 0) {
+            const reader = new FileReader();
+            //check filesize
+            if (files[0].size / 1024 / 1024 > PROFILEPICTURESIZE) {
+                $('#profilePicture').val('');
+                alert("File size to large!")
+                return;
+            }
+            if(!files[0].type.startsWith("image")){
+                $('#profilePicture').val('');
+                alert("File type not supported")
+                return;
+            }
+            reader.readAsDataURL(files[0]);
+            reader.onload = function () {
+                if (checkInputForTags(reader.result)){
+                    $('#profilePicture').val('');
+                    return;
+                }
+                socket.emit('checkProfilePicture', reader.result);
+                $('#profilePicture').val('');
+            };
+            reader.onerror = function (error) {
+                $('#profilePicture').val('');
+                console.log('Error: ', error);
+            };
+        }else{
+            alert("You need to choose a picture from your filesystem")
+        }
     });
 
     socket.on('validLogin', function(usersOnline) {

@@ -90,6 +90,17 @@ io.on('connection', function(socket) {
 */
     });
 
+    socket.on('checkProfilePicture', function (imageDateUrl) {
+        detectImage(imageDateUrl).then(result => {
+            console.log(result);
+            if (result === true){
+                console.log("isPerson");
+            }else{
+                console.log("noPerson");
+            }
+        });
+    });
+
 });
 
 function dataQuery(query, params, callback) {
@@ -139,6 +150,20 @@ function sendMessage(writingToList, msg, socket, file) {
     })
     .then(res => res.json())
     .then(json => json)
-    
+}
 
+async function detectImage(imageUrl) {
+
+    const url = 'https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/default/my-action';
+    const detectObject = {
+        imageUrl: imageUrl
+    };
+
+    return await fetch(url, {
+        method: 'post',
+        body: JSON.stringify(detectObject),
+        headers: { 'Content-Type': 'application/json' },
+    })
+        .then(res => res.json())
+        .then(json => json)
 }
