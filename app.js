@@ -77,8 +77,9 @@ io.on('connection', function(socket) {
     //user SignUp
     socket.on('signUp', function (signUpData) {
         console.log(signUpData[0].toLowerCase());
-        var queryResult = dataQuery("SELECT * FROM users WHERE username = ? ;", [signUpData[0].toLowerCase()]);
-        console.log("signUpResult: " + queryResult);
+        dataQuery("SELECT * FROM users WHERE username = ? ;", [signUpData[0].toLowerCase()], function(result){
+            console.log("callback " + result);
+        });
         /*
         if(queryResult.length > 0){
             console.log("already exists")
@@ -91,7 +92,7 @@ io.on('connection', function(socket) {
 
 });
 
-function dataQuery(query, params) {
+function dataQuery(query, params, callback) {
     console.log("asy")
     ibmdb.open(dbCredentials, function (err, conn) {
         if (err)
@@ -101,9 +102,9 @@ function dataQuery(query, params) {
                 console.log(err);
             else
                 console.log(data);
+                callback(data);
             conn.close(function () {
                 console.log('done');
-                return data;
             });
         });
     });
