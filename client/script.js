@@ -78,7 +78,7 @@ $(document).ready(function() {
         }
     });
 
-    socket.on('translationFailed', function (msg){
+    socket.on('alertMsg', function (msg){
         alert(msg);
     });
     
@@ -106,6 +106,7 @@ $(document).ready(function() {
         } 
     });
 
+    //kann noch mit zu submitSignUp rein
     $('#profilePictureButton').click(function(){
         const files = document.getElementById('profilePicture').files;
 
@@ -122,12 +123,13 @@ $(document).ready(function() {
                 alert("File type not supported")
                 return;
             }
-            reader.readAsDataURL(files[0]);
+            reader.readAsArrayBuffer(files[0]);
             reader.onload = function () {
                 if (checkInputForTags(reader.result)){
                     $('#profilePicture').val('');
                     return;
                 }
+                //console.log(reader.result);
                 socket.emit('checkProfilePicture', reader.result);
                 $('#profilePicture').val('');
             };
@@ -141,7 +143,6 @@ $(document).ready(function() {
     });
 
     socket.on('validLogin', function(usersOnline) {
-        console.log($("#onlineList").html());
         $("#onlineList").html("");
         usersOnline.forEach(function(username) {
             $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
