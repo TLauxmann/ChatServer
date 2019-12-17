@@ -5,15 +5,22 @@ var io = require('socket.io')(http);
 const fetch = require('node-fetch');
 
 const database = require('./db');
+const port = process.env.PORT || 3000;
 
-//start - express, html config
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + '/client/index.html');
+app.enable('trust proxy');
+
+app.use (function (req, res) {
+    if (!req.secure) {
+            // request was via http, so redirect to https
+            res.redirect('https://' + req.headers.host + req.url);
+    }
 });
 
 app.use('/client', express.static(__dirname + '/client'));
-
-const port = process.env.PORT || 3000;
+//start - express, html config
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + './client/index.html');
+});
 
 http.listen(port, () => {
   console.log('Server running on port: %d', port);
