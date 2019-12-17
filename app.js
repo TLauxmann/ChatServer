@@ -41,9 +41,9 @@ io.on('connection', function(socket) {
                     if (res && res.translations && res.translations[0].translation) {
                         sendMessage(writingToList, res.translations[0].translation, socket, file);
                     } else if(res && res.errorMessage) {
-                        io.to(socket.id).emit('translationFailed', res.errorMessage);
+                        io.to(socket.id).emit('alertMsg', res.errorMessage);
                     } else {
-                        io.to(socket.id).emit('translationFailed', "Something bad happend during the Translation");                    
+                        io.to(socket.id).emit('alertMsg', "Something bad happend during the Translation");                    
                     }
                 }
                     )
@@ -59,8 +59,8 @@ io.on('connection', function(socket) {
             username = "Robin F";
         }
         //check username and pw TODO
-        var queryParams = [username];
-        var queryResult = dataQuery("SELECT * FROM users WHERE username = ? ;", queryParams);
+        //var queryParams = [username];
+        //var queryResult = dataQuery("SELECT * FROM users WHERE username = ? ;", queryParams);
         if (!usersOnline.has(username)) {
             socket.username = username;
             usersOnline.set(username, socket.id);
@@ -88,6 +88,19 @@ io.on('connection', function(socket) {
             //insert into db
         }
 */
+    });
+
+    socket.on('checkProfilePicture', function (file) {
+        //kann dann zu sign up verschoben werden
+        detectImage(file).then(result => {
+            if(result.errorMessage && result.errorMessage.body){
+                socket.emit('alertMsg', JSON.parse(result.errorMessage.body).images[0].error.description)
+            }else if(result.errorMessage && result.errorMessage.message){
+                socket.emit('alertMsg', result.errorMessage.message)            
+            }else{
+                socket.emit('alertMsg', "Ist Person!")                            
+            }
+        });
     });
 
 });
@@ -139,6 +152,15 @@ function sendMessage(writingToList, msg, socket, file) {
     })
     .then(res => res.json())
     .then(json => json)
-    
+}
 
+async function detectImage(fileBuffer) {
+    const url = 'https://eu-de.functions.cloud.ibm.com/api/v1/web/86dd21a5-4b63-4429-a760-b21e371df199/default/my-action';
+
+    return await fetch(url, {
+        method: 'post',
+        body: fileBuffer,
+    })
+        .then(res => res.json())
+        .then(json => json)
 }
