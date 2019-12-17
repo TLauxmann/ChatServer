@@ -9,6 +9,7 @@ module.exports = {
                 ibmdb.open(dbCredentials).then(function (conn){
                     if (conn.connected){
                         conn.query(query, params).then(function(result){
+                            conn.close();
                             return resolve(result);
                         }).catch(err => {throw err;});
                     }else{
@@ -16,6 +17,7 @@ module.exports = {
                     }
                 }).catch(err => {throw err;});
             } catch (err){
+                conn.close();
                 return reject(err.message);
             }
         });
