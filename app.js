@@ -100,11 +100,6 @@ io.on('connection', function(socket) {
         });
     });
 
-    socket.on('checkProfilePicture', function (buffer, base64) {
-        console.log(base64.length);
-
-    });
-
 });
 
 function sendMessage(writingToList, msg, socket, file) {

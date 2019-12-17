@@ -34,6 +34,7 @@ $(document).ready(function() {
                     $('#file').val('');
                     return;
                 }
+                $('.loader').css("display", "block");
                 socket.emit('chat message', $('#m').val(), reader.result, writingToList, translate);
                 $('#m').val('');
                 $('#file').val('');
@@ -51,6 +52,7 @@ $(document).ready(function() {
 
     //recieve message and check for file   
     socket.on('chat message', function (msg, username, file, sendTo) {
+        $('.loader').css("display", "none");
         //create String for tooltip
         var sendToList = "";
         if (sendTo.length) {
@@ -79,11 +81,13 @@ $(document).ready(function() {
     });
 
     socket.on('alertMsg', function (msg){
+        $('.loader').css("display", "none");
         alert(msg);
     });
     
     //server check if Login successfull
     $('#submitLogin').click(function() {
+        $('.loader').css("display", "block");
         socket.emit('checkName', $("#username").val(), $("#password").val());
     });
 
@@ -121,6 +125,7 @@ $(document).ready(function() {
                         base64Reader.onload = function () {
                             $('#profilePicture').val('');
                             //pepare parameter for db
+                            $('.loader').css("display", "block");
                             var signUpData = [$("#suUsername").val(), $("#suPsw").val(), $("#suEmail").val(), base64Reader.result]
                             socket.emit('signUp', signUpData, bufferReader.result);
                         }
@@ -141,26 +146,29 @@ $(document).ready(function() {
     });
 
     socket.on('signUpSuccess', function(){
+        $('.loader').css("display", "none");
         alert("Registration successful");
         document.getElementById('signUp').style.display = 'none'
     });
 
     socket.on('validLogin', function (usersOnline, profilePictures) {
+        $('.loader').css("display", "none");
         mappedPicutres = new Map(profilePictures);
         $("#onlineList").html("");
         usersOnline.forEach(function(username) {
-            $("#onlineList").append(`<li class=${username} ><img src=${mappedPicutres.get(username)} height="50" width="50" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+            $("#onlineList").append(`<li class=${username} ><img src=${mappedPicutres.get(username)} class="profilePic" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         });
         $("#login").hide();
         $("#mainChat").show();
     });
 
     socket.on('invalidLogin', function() {
+        $('.loader').css("display", "none");
         alert("This username already exists!")
     });
 
     socket.on('userJoint', function(username, picture) {
-        $("#onlineList").append(`<li class=${username} ><img src=${picture} height="50" width="50" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+        $("#onlineList").append(`<li class=${username} ><img src=${picture} class="profilePic" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });
 
