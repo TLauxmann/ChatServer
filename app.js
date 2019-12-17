@@ -67,7 +67,7 @@ io.on('connection', function(socket) {
                     //remove own name
                     var uoList = Array.from(usersOnline.keys());
                     uoList.splice(uoList.indexOf(socket.username), 1)
-                    socket.emit('validLogin', uoList, profilePictures);
+                    socket.emit('validLogin', uoList, Array.from(profilePictures));
                     socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
                 } else {
                     socket.emit('invalidLogin');

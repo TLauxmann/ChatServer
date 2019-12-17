@@ -146,9 +146,10 @@ $(document).ready(function() {
     });
 
     socket.on('validLogin', function (usersOnline, profilePictures) {
+        mappedPicutres = new Map(profilePictures);
         $("#onlineList").html("");
         usersOnline.forEach(function(username) {
-            $("#onlineList").append(`<li class=${username} ><img src=${profilePictures.get(username)} height="40" width="40" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+            $("#onlineList").append(`<li class=${username} ><img src=${mappedPicutres.get(username)} height="50" width="50" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         });
         $("#login").hide();
         $("#mainChat").show();
@@ -159,7 +160,7 @@ $(document).ready(function() {
     });
 
     socket.on('userJoint', function(username, picture) {
-        $("#onlineList").append(`<li class=${username} ><img src=${picture} height="40" width="40" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+        $("#onlineList").append(`<li class=${username} ><img src=${picture} height="50" width="50" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });
 
