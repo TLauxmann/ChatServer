@@ -4,8 +4,7 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const fetch = require('node-fetch');
 
-var ibmdb = require('ibm_db');
-const dbCredentials = "DATABASE=BLUDB;HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;PORT=50000;PROTOCOL=TCPIP;UID=vbh62188;PWD=mp86p3^197c7zh21"
+const database = require('./db');
 
 //start - express, html config
 app.get('/', function(req, res) {
@@ -76,18 +75,16 @@ io.on('connection', function(socket) {
 
     //user SignUp
     socket.on('signUp', function (signUpData) {
-        console.log(signUpData[0].toLowerCase());
-        dataQuery("SELECT * FROM users WHERE username = ? ;", [signUpData[0].toLowerCase()], function(result){
-            console.log("callback " + result);
-        });
-        /*
-        if(queryResult.length > 0){
-            console.log("already exists")
-        }else{
-            console.log("valid")
-            //insert into db
-        }
-*/
+        database.dataQuery("SELECT * FROM users WHERE username = ? ;", [signUpData[0].toLowerCase()]).then(function(result){
+            if(result && result.length > 0){
+                socket.emit('alertMsg', "This user already exists")                            
+            }else{
+                signUpData[0] = signUpData[0].toLowerCase();
+                database.dataQuery("INSERT INTO USERS (USERNAME,PASSWORD,EMAIL) VALUES ( ?, ?, ? );", signUpData).then(function(result){
+                    socket.emit('alertMsg', "Registration successful") ;                           
+                })
+            }
+        })
     });
 
     socket.on('checkProfilePicture', function (file) {
@@ -104,25 +101,6 @@ io.on('connection', function(socket) {
     });
 
 });
-
-function dataQuery(query, params, callback) {
-    console.log("asy")
-    ibmdb.open(dbCredentials, function (err, conn) {
-        if (err)
-            return console.log(err);
-        conn.query(query, params, function (err, data) {
-            if (err)
-                console.log(err);
-            else
-                console.log(data);
-                callback(data);
-            conn.close(function () {
-                console.log('done');
-            });
-        });
-    });
-    console.log("nc")
-}
 
 function sendMessage(writingToList, msg, socket, file) {
     if (writingToList.length) {
