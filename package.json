@@ -4,6 +4,7 @@
   "description": "cloud computing ws19 exercise1",
   "dependencies": {
     "express": "^4.17.1",
+    "helmet": "^3.21.2",
     "ibm-watson": "^5.1.0",
     "ibm_db": "^2.6.1",
     "node-fetch": "^2.6.0",

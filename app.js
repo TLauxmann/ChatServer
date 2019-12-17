@@ -3,23 +3,34 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const fetch = require('node-fetch');
+const helmet = require('helmet');
 
 const database = require('./db');
 const port = process.env.PORT || 3000;
 
-app.enable('trust proxy');
+/*app.enable('trust proxy');
 
 app.use (function (req, res) {
     if (!req.secure) {
             // request was via http, so redirect to https
             res.redirect('https://' + req.headers.host + req.url);
     }
-});
+});*/
+
+//Security
+app.use(helmet());
+
+app.use(helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", 'https://code.jquery.com/jquery-3.4.1.js']
+    }
+  }));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
 app.get('/', function(req, res) {
-    res.sendFile(__dirname + './client/index.html');
+    res.sendFile(__dirname + '/client/index.html');
 });
 
 http.listen(port, () => {
