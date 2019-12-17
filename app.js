@@ -21,13 +21,14 @@ http.listen(port, () => {
 //end - express, html config
 
 var usersOnline = new Map();
+var profilePictures = new Map();
 
 io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
+        profilePictures.delete(socket.username);
         socket.broadcast.emit('userLeft', socket.username) // to all others
-
     });
 
     socket.on('chat message', function (msg, file, writingToList, translate) {
@@ -62,11 +63,12 @@ io.on('connection', function(socket) {
                 if (!usersOnline.has(username)) {
                     socket.username = username;
                     usersOnline.set(username, socket.id);
+                    profilePictures.set(username, result[0].PIC)
                     //remove own name
                     var uoList = Array.from(usersOnline.keys());
                     uoList.splice(uoList.indexOf(socket.username), 1)
-                    socket.emit('validLogin', uoList);
-                    socket.broadcast.emit('userJoint', username) // to all others
+                    socket.emit('validLogin', uoList, profilePictures);
+                    socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
                 } else {
                     socket.emit('invalidLogin');
                 }

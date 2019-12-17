@@ -145,10 +145,10 @@ $(document).ready(function() {
         document.getElementById('signUp').style.display = 'none'
     });
 
-    socket.on('validLogin', function(usersOnline) {
+    socket.on('validLogin', function (usersOnline, profilePictures) {
         $("#onlineList").html("");
         usersOnline.forEach(function(username) {
-            $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+            $("#onlineList").append(`<li class=${username} ><img src=${profilePictures.get(username)} height="40" width="40" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         });
         $("#login").hide();
         $("#mainChat").show();
@@ -158,8 +158,8 @@ $(document).ready(function() {
         alert("This username already exists!")
     });
 
-    socket.on('userJoint', function(username) {
-        $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+    socket.on('userJoint', function(username, picture) {
+        $("#onlineList").append(`<li class=${username} ><img src=${picture} height="40" width="40" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });
 
