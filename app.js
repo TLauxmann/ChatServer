@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 const fetch = require('node-fetch');
 const helmet = require('helmet');
 const port = process.env.PORT || 3000;
+const database = require('./db');
 
 app.enable('trust proxy');
 /*
@@ -14,7 +15,8 @@ app.use (function (req, res) {
             res.redirect('https://' + req.headers.host + req.url);
     }
 
-});*/ 
+});
+*/
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
