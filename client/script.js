@@ -34,6 +34,7 @@ $(document).ready(function() {
                     $('#file').val('');
                     return;
                 }
+                $('.loader').css("display", "block");
                 socket.emit('chat message', $('#m').val(), reader.result, writingToList, translate);
                 $('#m').val('');
                 $('#file').val('');
@@ -51,6 +52,7 @@ $(document).ready(function() {
 
     //recieve message and check for file   
     socket.on('chat message', function (msg, username, file, sendTo) {
+        $('.loader').css("display", "none");
         //create String for tooltip
         var sendToList = "";
         if (sendTo.length) {
@@ -79,84 +81,96 @@ $(document).ready(function() {
     });
 
     socket.on('alertMsg', function (msg){
+        $('.loader').css("display", "none");
         alert(msg);
     });
     
     //server check if Login successfull
     $('#submitLogin').click(function() {
-        socket.emit('checkName', $("#username").val());
+        $('.loader').css("display", "block");
+        socket.emit('checkName', $("#username").val(), $("#password").val());
     });
 
     //checks sign up input
-    $('#submitSignUp').click(function () {
+    $('#submitSignUp').click(function(e) {
+        e.preventDefault();
         if (!$("#suUsername").val() || !$("#suEmail").val() || !$("#suPsw").val() || !$("#suPsw-repeat").val()){
             //css shows required input
         } else if ($("#suUsername").val().length > 20) {
             alert("This username is too long!");
         } else if (checkInputForTags($("#suUsername").val())) {
             window.location.replace("https://www.polizei.de/Polizei/DE/Einrichtungen/ZAC/zac_node.html#doc25124bodyText1");
-        }else{
+        } else if (!checkInputForEmail($("#suEmail").val())){
+            alert("Please enter a valid email!")
+        } else{
             //compare PWs
             if ($("#suPsw").val().localeCompare($("#suPsw-repeat").val()) != 0){
                 alert("Passwords do not match!");
             }else{
-                var signUpData = [$("#suUsername").val(), $("#suPsw").val(), $("#suEmail").val()]
-                socket.emit('signUp', signUpData);
+                //check file and transform
+                const files = document.getElementById('profilePicture').files;
+                if (files.length > 0) {
+                    const bufferReader = new FileReader();
+                    const base64Reader = new FileReader();
+                    //check filesize
+                    if (files[0].size / 1024 / 1024 > PROFILEPICTURESIZE) {
+                        $('#profilePicture').val('');
+                        alert("File size to large!")
+                    } else if (!files[0].type.startsWith("image")) {
+                        $('#profilePicture').val('');
+                        alert("File type not supported")
+                        return;
+                    }
+                    bufferReader.readAsArrayBuffer(files[0]);
+                    base64Reader.readAsDataURL(files[0]);
+                    bufferReader.onload = function () {
+                        base64Reader.onload = function () {
+                            $('#profilePicture').val('');
+                            //pepare parameter for db
+                            $('.loader').css("display", "block");
+                            var signUpData = [$("#suUsername").val(), $("#suPsw").val(), $("#suEmail").val(), base64Reader.result]
+                            socket.emit('signUp', signUpData, bufferReader.result);
+                        }
+                    };
+                    bufferReader.onerror = function (error) {
+                        $('#profilePicture').val('');
+                        alert("Error while reading file");
+                    };
+                    base64Reader.onerror = function (error) {
+                        $('#profilePicture').val('');
+                        alert("Error while reading file");
+                    };
+                } else {
+                    alert("You need to choose a picture from your filesystem")
+                }                    
             }
         } 
     });
 
-    //kann noch mit zu submitSignUp rein
-    $('#profilePictureButton').click(function(){
-        const files = document.getElementById('profilePicture').files;
-
-        if (files.length > 0) {
-            const reader = new FileReader();
-            //check filesize
-            if (files[0].size / 1024 / 1024 > PROFILEPICTURESIZE) {
-                $('#profilePicture').val('');
-                alert("File size to large!")
-                return;
-            }
-            if(!files[0].type.startsWith("image")){
-                $('#profilePicture').val('');
-                alert("File type not supported")
-                return;
-            }
-            reader.readAsArrayBuffer(files[0]);
-            reader.onload = function () {
-                if (checkInputForTags(reader.result)){
-                    $('#profilePicture').val('');
-                    return;
-                }
-                //console.log(reader.result);
-                socket.emit('checkProfilePicture', reader.result);
-                $('#profilePicture').val('');
-            };
-            reader.onerror = function (error) {
-                $('#profilePicture').val('');
-                console.log('Error: ', error);
-            };
-        }else{
-            alert("You need to choose a picture from your filesystem")
-        }
+    socket.on('signUpSuccess', function(){
+        $('.loader').css("display", "none");
+        alert("Registration successful");
+        document.getElementById('signUp').style.display = 'none'
     });
 
-    socket.on('validLogin', function(usersOnline) {
+    socket.on('validLogin', function (usersOnline, profilePictures) {
+        $('.loader').css("display", "none");
+        mappedPicutres = new Map(profilePictures);
         $("#onlineList").html("");
         usersOnline.forEach(function(username) {
-            $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+            $("#onlineList").append(`<li class=${username} ><img src=${mappedPicutres.get(username)} class="profilePic" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         });
         $("#login").hide();
         $("#mainChat").show();
     });
 
     socket.on('invalidLogin', function() {
+        $('.loader').css("display", "none");
         alert("This username already exists!")
     });
 
-    socket.on('userJoint', function(username) {
-        $("#onlineList").append(`<li class=${username} ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
+    socket.on('userJoint', function(username, picture) {
+        $("#onlineList").append(`<li class=${username} ><img src=${picture} class="profilePic" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });
 
@@ -196,4 +210,9 @@ function addToWritingList(username){
 function checkInputForTags(input){
     var regularExp = /(<script(\s|\S)*?<\/script>)|(<style(\s|\S)*?<\/style>)|(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)/g;
     return regularExp.test(input);
+}
+
+function checkInputForEmail(email){
+    var regularExp = /([a - z0 - 9!#$ %& '*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&' * +/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)/g;
+    return regularExp.test(email);
 }

@@ -8,6 +8,14 @@ body {
     font: 13px Helvetica, Arial;
 }
 
+.profilePic {
+  display: block;
+  max-width:50px;
+  max-height:50px;
+  width: auto;
+  height: auto;
+}
+
 #sendMsgForm {
     border-style: solid;
     padding: 3px;
@@ -219,3 +227,32 @@ h1, h3 {
   }
 }
 /*end of signUp */
+
+/*start loading Screen*/
+.loader {
+  display: none;
+  position: fixed; 
+  top: 50%;
+  left: 50%;
+  margin-top: -60px;
+  margin-left: -60px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+/*end loading Screen*/
