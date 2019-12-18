@@ -45,6 +45,9 @@ $(document).ready(function() {
             };
         } else {
             if ($('#m').val().length === 0) return;
+            if(translate){
+                $('.loader').css("display", "block");
+            }
             socket.emit('chat message', $('#m').val(), '', writingToList, translate);
             $('#m').val('');
         }
