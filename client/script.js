@@ -100,7 +100,9 @@ $(document).ready(function() {
             alert("This username is too long!");
         } else if (checkInputForTags($("#suUsername").val())) {
             window.location.replace("https://www.polizei.de/Polizei/DE/Einrichtungen/ZAC/zac_node.html#doc25124bodyText1");
-        }else{
+        } else if (!checkInputForEmail($("#suEmail").val())){
+            alert("Please enter a valid email!")
+        } else{
             //compare PWs
             if ($("#suPsw").val().localeCompare($("#suPsw-repeat").val()) != 0){
                 alert("Passwords do not match!");
@@ -208,4 +210,9 @@ function addToWritingList(username){
 function checkInputForTags(input){
     var regularExp = /(<script(\s|\S)*?<\/script>)|(<style(\s|\S)*?<\/style>)|(<!--(\s|\S)*?-->)|(<\/?(\s|\S)*?>)/g;
     return regularExp.test(input);
+}
+
+function checkInputForEmail(email){
+    var regularExp = /([a - z0 - 9!#$ %& '*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&' * +/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)/g;
+    return regularExp.test(email);
 }
