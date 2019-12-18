@@ -3,9 +3,7 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const fetch = require('node-fetch');
-const frameguard = require('frameguard')
-const xssFilter = require('x-xss-protection')
-const database = require('./db');
+const helmet = require('helmet');
 const port = process.env.PORT || 3000;
 
 /*app.enable('trust proxy');
@@ -18,8 +16,7 @@ app.use (function (req, res) {
 });*/
 
 //Security
-app.use(frameguard({ action: 'deny' }));
-app.use(xssFilter());
+app.use(helmet());
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
