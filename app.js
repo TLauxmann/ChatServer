@@ -3,8 +3,8 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const fetch = require('node-fetch');
-const helmet = require('helmet');
-
+const frameguard = require('frameguard')
+const xssFilter = require('x-xss-protection')
 const database = require('./db');
 const port = process.env.PORT || 3000;
 
@@ -18,14 +18,8 @@ app.use (function (req, res) {
 });*/
 
 //Security
-app.use(helmet());
-
-app.use(helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", 'https://code.jquery.com/jquery-3.4.1.js']
-    }
-  }));
+app.use(frameguard({ action: 'deny' }));
+app.use(xssFilter());
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
