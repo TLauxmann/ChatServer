@@ -103,9 +103,9 @@ $(document).ready(function() {
             alert("This username is too long!");
         } else if (checkInputForTags($("#suUsername").val())) {
             window.location.replace("https://www.polizei.de/Polizei/DE/Einrichtungen/ZAC/zac_node.html#doc25124bodyText1");
-        } else if (!checkInputForEmail($("#suEmail").val())){
+        /*} else if (!checkInputForEmail($("#suEmail").val())){
             alert("Please enter a valid email!")
-        } else{
+        */} else{
             //compare PWs
             if ($("#suPsw").val().localeCompare($("#suPsw-repeat").val()) != 0){
                 alert("Passwords do not match!");
