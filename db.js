@@ -1,5 +1,5 @@
 var ibmdb = require('ibm_db');
-const dbCredentials = "DATABASE=BLUDB;HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;PORT=50000;PROTOCOL=TCPIP;UID=vbh62188;PWD=mp86p3^197c7zh21"
+const dbCredentials = "DATABASE=BLUDB;HOSTNAME=dashdb-txn-sbox-yp-lon02-01.services.eu-gb.bluemix.net;PORT=50000;PROTOCOL=TCPIP;UID=mtg90551;PWD=b4p^80d71ztbpkkd"
 
 module.exports = {
 
