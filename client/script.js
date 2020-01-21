@@ -183,6 +183,10 @@ $(document).ready(function() {
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " left the chatroom"));
     });
 
+    socket.on('serverName', function(serverName){
+        $('#serverId').html("Server: " + serverName);
+    });
+
 });
 
 function appendMedia(username, file, msg, mediaType, sendToList) {

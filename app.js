@@ -8,6 +8,8 @@ const port = process.env.PORT || 3000;
 const database = require('./db');
 const bcrypt = require('bcryptjs');
 
+var serverName = process.env.VCAP_APP_HOST ? process.envVCAP_APP_HOST + ":" + process.env.VCAP_APP_PORT : "localhost:" + port;
+
 //redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
 /*var SessionSockets = require('session.socket.io');
 var sessionSockets = new SessionSockets(io, sessionStore, cookieParser, 'jsessionid');
@@ -31,7 +33,7 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
-app.use(express.session({store: sessionStore, key: 'jsessionid', secret: 'your secret here'}));
+//app.use(express.session({store: sessionStore, key: 'jsessionid', secret: 'your secret here'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
@@ -49,6 +51,8 @@ var profilePictures = new Map();
 
 //sessionSockets.on('connection', function(err, socket, session) {
 io.on('connection', function(socket){
+
+    socket.emit('serverName', serverName);
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
