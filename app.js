@@ -35,8 +35,8 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
-app.use(cookieParser('u dont know'));
-app.use(session({key: 'jsessionid', resave: false, saveUninitialized: false, secret: 'u dont know'}));
+app.use(cookieParser);
+app.use(session({key: 'jsessionid', resave: true, saveUninitialized: true, secret: 'u dont know'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
