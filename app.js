@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 const database = require('./db');
 const bcrypt = require('bcryptjs');
 
-var serverName = process.env.VCAP_SERVICES ? process.env.VCAP_SERVICES + ":" + process.env.VCAP_SERVICES : "localhost:" + port;
+var serverName = process.env ? process.env : "localhost:" + port;
 
 //redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
 /*var SessionSockets = require('session.socket.io');
