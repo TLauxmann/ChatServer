@@ -6,9 +6,10 @@ const fetch = require('node-fetch');
 const helmet = require('helmet');
 const port = process.env.PORT || 3000;
 const database = require('./db');
+const bcrypt = require('bcryptjs');
 
 app.enable('trust proxy');
-/*
+
 app.use (function (req, res) {
     if (!req.secure) {
             // request was via http, so redirect to https
@@ -16,7 +17,7 @@ app.use (function (req, res) {
     }
 
 });
-*/
+
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
@@ -79,7 +80,10 @@ io.on('connection', function(socket) {
         if (username.toUpperCase() == "WÜRGER" || username.toUpperCase() == "DER WÜRGER"){
             username = "Robin F";
         }
+
+        //TODO: Not search for password, because its not saved in plain text
         database.dataQuery("SELECT * FROM users WHERE USERNAME = ? AND PASSWORD = ? ;", [username.toLowerCase(), password]).then(function(result){
+            //TODO: compare passwords - bcrypt.compare(password, result[0].password) must be true
             if(result && result.length > 0){
                 if (!usersOnline.has(username)) {
                     socket.username = username;
@@ -104,8 +108,9 @@ io.on('connection', function(socket) {
 
         var detectPic = detectImage(buffer);
         var dbEntry = database.dataQuery("SELECT * FROM users WHERE username = ? ;", [signUpData[0].toLowerCase()])
+        var hashPw = hashPassword(signUpData[1]);
         
-        Promise.all([detectPic, dbEntry]).then(function(result){
+        Promise.all([detectPic, dbEntry, hashPw]).then(function(result){
             if (result[0].errorMessage && result[0].errorMessage.body) {
                 socket.emit('alertMsg', JSON.parse(result[0].errorMessage.body).images[0].error.description)
             } else if (result[0].errorMessage && result[0].errorMessage.message) {
@@ -114,6 +119,10 @@ io.on('connection', function(socket) {
                 socket.emit('alertMsg', "This user already exists")                            
             }else{
                 signUpData[0] = signUpData[0].toLowerCase();
+                console.log(result[2].pw);
+                console.log(signUpData[1]);
+                signUpData[1] = result[2].pw;
+                console.log(signUpData[1]);
                 database.dataQuery("INSERT INTO USERS (USERNAME,PASSWORD,EMAIL,PIC) VALUES ( ?, ?, ?, ? );", signUpData).then(function(result){
                     socket.emit('signUpSuccess') ;                           
                 })
@@ -122,6 +131,20 @@ io.on('connection', function(socket) {
     });
 
 });
+
+async function hashPassword(originalPw){
+    //generate Salt
+    const salt = await bcrypt.genSalt(10);
+
+    //hash the password
+    const hashPassword = await bcrypt.hash(originalPw, salt);
+    
+    console.log(salt);
+
+    return {
+        pw: hashPassword
+    }
+}
 
 function sendMessage(writingToList, msg, socket, file) {
     if (writingToList.length) {
