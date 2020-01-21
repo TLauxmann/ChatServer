@@ -8,6 +8,15 @@ const port = process.env.PORT || 3000;
 const database = require('./db');
 const bcrypt = require('bcryptjs');
 
+//redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
+/*var SessionSockets = require('session.socket.io');
+var sessionSockets = new SessionSockets(io, sessionStore, cookieParser, 'jsessionid');
+
+var redis = require('redis');
+var RedisStore = require('connect-redis')(express);
+var rClient = redis.createClient();
+var sessionStore = new RedisStore({client:rClient});*/
+
 app.enable('trust proxy');
 
    app.use (function (req, res, next) {
@@ -22,6 +31,7 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
+app.use(express.session({store: sessionStore, key: 'jsessionid', secret: 'your secret here'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
@@ -37,7 +47,8 @@ http.listen(port, () => {
 var usersOnline = new Map();
 var profilePictures = new Map();
 
-io.on('connection', function(socket) {
+//sessionSockets.on('connection', function(err, socket, session) {
+io.on('connection', function(socket){
 
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
@@ -174,7 +185,7 @@ async function detectImage(fileBuffer) {
     return await fetch(url, {
         method: 'post',
         body: fileBuffer,
-    })
+    })  
         .then(res => res.json())
         .then(json => json)
 }
