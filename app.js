@@ -33,7 +33,7 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
-//app.use(express.session({store: sessionStore, key: 'jsessionid', secret: 'your secret here'}));
+app.use(express.session({key: 'jsessionid', secret: 'your secret here'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
