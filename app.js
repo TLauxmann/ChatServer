@@ -10,14 +10,6 @@ const bcrypt = require('bcryptjs');
 
 app.enable('trust proxy');
 
-app.use (function (req, res) {
-    if (!req.secure) {
-            // request was via http, so redirect to https
-            res.redirect('https://' + req.headers.host + req.url);
-    }
-
-});
-
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
