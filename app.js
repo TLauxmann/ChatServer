@@ -1,4 +1,5 @@
 var express = require('express');
+var session = require("express-session");
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
@@ -33,7 +34,7 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
-app.use(express.session({key: 'jsessionid', secret: 'your secret here'}));
+app.use(session({ key: 'jsessionid', resave: true, saveUninitialized: true, secret: 'u dont know'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
