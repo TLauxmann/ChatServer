@@ -9,6 +9,7 @@ const fetch = require('node-fetch');
 const helmet = require('helmet');
 const port = process.env.PORT || 3000;
 const database = require('./db');
+var rediscfg = require('./redisDb');
 const bcrypt = require('bcryptjs');
 
 var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "localhost:" + port;
@@ -17,11 +18,15 @@ var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "
 /*var SessionSockets = require('session.socket.io');
 var sessionSockets = new SessionSockets(io, sessionStore, cookieParser, 'jsessionid');
 
-var redis = require('redis');
 var RedisStore = require('connect-redis')(express);
 var rClient = redis.createClient();
 var sessionStore = new RedisStore({client:rClient});*/
-
+var redis = require('redis');
+client = redis.createClient({
+    host: rediscfg.host,
+    port: rediscfg.port,
+    password: rediscfg.password
+})
 app.enable('trust proxy');
 
    app.use (function (req, res, next) {
