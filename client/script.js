@@ -184,8 +184,7 @@ $(document).ready(function() {
     });
 
     socket.on('serverName', function(serverName){
-        alert(JSON.stringify(serverName, null, 4))
-        $('#serverId').html("Server: " + JSON.stringify(serverName, null, 4));
+        $('#serverId').html("Server: " + serverName);
     });
 
 });
