@@ -1,5 +1,6 @@
 var express = require('express');
 var session = require("express-session");
+var cookieParser = require('cookie-parser')
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
@@ -34,7 +35,8 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
-app.use(session({ key: 'jsessionid', resave: false, saveUninitialized: false, secret: 'u dont know'}));
+app.use(cookieParser('u dont know'));
+app.use(session({key: 'jsessionid', resave: false, saveUninitialized: false, secret: 'u dont know'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
