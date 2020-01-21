@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "cloud computing ws19 exercise1",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
     "helmet": "^3.21.2",
     "ibm-watson": "^5.1.0",
