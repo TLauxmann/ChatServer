@@ -41,7 +41,7 @@ var socketIOExpressSession = require('socket.io-express-session');
 io.use(socketIOExpressSession(session)); // session support
 
 app.enable('trust proxy');
-
+/*
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
@@ -51,7 +51,7 @@ app.enable('trust proxy');
             res.redirect('https://' + req.headers.host + req.url);
     }
 });
-
+*/
 //Security
 app.use(helmet());
 
@@ -107,26 +107,26 @@ io.on('connection', function(socket){
         if (username.toUpperCase() == "WÜRGER" || username.toUpperCase() == "DER WÜRGER"){
             username = "Robin F";
         }
-
-        //TODO: Not search for password, because its not saved in plain text
-        database.dataQuery("SELECT * FROM users WHERE USERNAME = ? AND PASSWORD = ? ;", [username.toLowerCase(), password]).then(function(result){
-            //TODO: compare passwords - bcrypt.compare(password, result[0].password) must be true
-            if(result && result.length > 0){
-                if (!usersOnline.has(username)) {
-                    socket.username = username;
-                    usersOnline.set(username, socket.id);
-                    profilePictures.set(username, result[0].PIC)
-                    //remove own name
-                    var uoList = Array.from(usersOnline.keys());
-                    uoList.splice(uoList.indexOf(socket.username), 1)
-                    socket.emit('validLogin', uoList, Array.from(profilePictures));
-                    socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
-                } else {
-                    socket.emit('invalidLogin');
+        database.dataQuery("SELECT * FROM users WHERE USERNAME = ? ;", [username.toLowerCase()]).then(function(result){
+            //compare password with hashed db pw
+            bcrypt.compare(password, result[0].PASSWORD).then(function(compared){
+                if (result && result.length > 0 && compared){
+                    if (!usersOnline.has(username)) {
+                        socket.username = username;
+                        usersOnline.set(username, socket.id);
+                        profilePictures.set(username, result[0].PIC)
+                        //remove own name
+                        var uoList = Array.from(usersOnline.keys());
+                        uoList.splice(uoList.indexOf(socket.username), 1)
+                        socket.emit('validLogin', uoList, Array.from(profilePictures));
+                        socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
+                    } else {
+                        socket.emit('invalidLogin');
+                    }
+                }else{
+                    socket.emit('alertMsg', "Wrong username or password")                            
                 }
-            }else{
-                socket.emit('alertMsg', "Wrong username or password")                            
-            }
+            });
         });
     });
 
