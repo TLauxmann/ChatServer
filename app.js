@@ -19,11 +19,12 @@ var expressSession = require("express-session");
 var redis = require('redis');
 var RedisStore = require('connect-redis')(expressSession);
 
-var rClient = redis.createClient({
+redisLogin = {
     host: rediscfg.host,
     port: rediscfg.port,
     password: rediscfg.password
-})
+};
+var rClient = redis.createClient(redisLogin)
 
 var sessionStore = new RedisStore({client: rClient});
 var session = expressSession({
@@ -40,8 +41,13 @@ app.use(session);
 var socketIOExpressSession = require('socket.io-express-session');
 io.use(socketIOExpressSession(session)); // session support
 
+//Creating pub and sub
+var sub = redis.createClient(redisLogin);
+var pub = redis.createClient(redisLogin);
+sub.subscribe('chat');
+
 app.enable('trust proxy');
-/*
+
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
@@ -51,7 +57,7 @@ app.enable('trust proxy');
             res.redirect('https://' + req.headers.host + req.url);
     }
 });
-*/
+
 //Security
 app.use(helmet());
 
@@ -120,6 +126,7 @@ io.on('connection', function(socket){
                         uoList.splice(uoList.indexOf(socket.username), 1)
                         socket.emit('validLogin', uoList, Array.from(profilePictures));
                         socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
+                        pub.publish('chat', username);
                     } else {
                         socket.emit('invalidLogin');
                     }
@@ -157,6 +164,10 @@ io.on('connection', function(socket){
         });
     });
 
+    sub.on('message', function (channel, message) {
+        socket.emit(channel, message);
+    });
+
 });
 
 async function hashPassword(originalPw){
@@ -184,6 +195,7 @@ function sendMessage(writingToList, msg, socket, file) {
     }
     else {
         io.emit('chat message', msg, socket.username, file, writingToList);
+        pub.publish('chat', msg);
     }
 }
 
