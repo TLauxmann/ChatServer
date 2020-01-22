@@ -31,6 +31,9 @@ var session = expressSession({
     resave: false, 
     saveUninitialized: false, 
     secret: 'u dont know' })
+    
+var socketIOExpressSession = require('socket.io-express-session');
+io.use(socketIOExpressSession(app.session)); // session support
 
 app.use(cookieParser('u dont know'));
 app.use(session);
