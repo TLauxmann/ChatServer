@@ -1,7 +1,4 @@
 var express = require('express');
-var session = require("express-session");
-var cookieParser = require('cookie-parser')
-//var sessionStore = require('sessionstore');
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
@@ -17,15 +14,28 @@ var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "
 //redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
 var SessionSockets = require('session.socket.io');
 
+//needed for multiple instances
+var cookieParser = require('cookie-parser')
+var expressSession = require("express-session");
 var redis = require('redis');
-var RedisStore = require('connect-redis')(express);
+var RedisStore = require('connect-redis')(expressSession);
+
 var rClient = redis.createClient({
     host: rediscfg.host,
     port: rediscfg.port,
     password: rediscfg.password
 })
-var sessionStore = new RedisStore({client:rClient});
-var sessionSockets = new SessionSockets(io, sessionStore, cookieParser, 'JSESSIONID');
+
+var sessionStore = new RedisStore({client: rClient});
+var session = expressSession({
+    store: sessionStore,
+    key: 'JSESSIONID', 
+    resave: false, 
+    saveUninitialized: false, 
+    secret: 'u dont know' })
+
+app.use(cookieParser);
+app.use(session);
 
 app.enable('trust proxy');
 
@@ -41,8 +51,6 @@ app.enable('trust proxy');
 
 //Security
 app.use(helmet());
-app.use(cookieParser('u dont know'));
-app.use(session({ store: sessionStore ,key: 'jsessionid', resave: false, saveUninitialized: false, secret: 'u dont know'}));
 
 app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
