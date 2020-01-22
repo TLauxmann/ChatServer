@@ -186,6 +186,7 @@ io.on('connection', function(socket){
         if (channel == 'userJoint'){
             if (data && data != 'undefined'){
                 var jointObj = JSON.parse(data);
+                console.log("joint " + jointObj.username);
                 if(!usersOnline.has(jointObj.username)){
                     usersOnline.set(jointObj.username, jointObj.socketId);
                     profilePictures.set(jointObj.username, jointObj.picture);
@@ -195,6 +196,7 @@ io.on('connection', function(socket){
         }else if(channel == 'userLeft'){
             if (data && data != 'undefined'){
                 var leftObj = JSON.parse(data);
+                console.log("left " + leftObj.username);
                 if (usersOnline.has(leftObj.username)) {
                     usersOnline.delete(leftObj.username);
                     profilePictures.delete(leftObj.username);
@@ -219,12 +221,13 @@ async function hashPassword(originalPw){
 
 function sendMessage(writingToList, msg, socket, file) {
     if (writingToList.length) {
+        data = { "msg": msg, "username": socket.username, "file": file, "writingToList": JSON.stringify(Array.of(writingToList)) }
         //send to selected users
         writingToList.forEach(function (username) {
-            io.to(usersOnline.get(username)).emit('chat message', msg, socket.username, file, writingToList);
+            io.to(usersOnline.get(username)).emit('chat message', data);
         });
         //and to yourself
-        io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
+        io.to(socket.id).emit('chat message', data);
     } else {
         data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
         pub.publish('chat message', JSON.stringify(data));
