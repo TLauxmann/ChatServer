@@ -12,8 +12,6 @@ const bcrypt = require('bcryptjs');
 var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "localhost:" + port;
 
 //redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
-var SessionSockets = require('session.socket.io');
-
 //needed for multiple instances
 var cookieParser = require('cookie-parser')
 var expressSession = require("express-session");
@@ -34,7 +32,7 @@ var session = expressSession({
     saveUninitialized: false, 
     secret: 'u dont know' })
 
-app.use(cookieParser);
+app.use(cookieParser('u dont know'));
 app.use(session);
 
 app.enable('trust proxy');
