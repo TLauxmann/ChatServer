@@ -54,7 +54,13 @@ $(document).ready(function() {
     });
 
     //recieve message and check for file   
-    socket.on('chat message', function (msg, username, file, sendTo) {
+    socket.on('chat message', function (data) {
+        var messageObj = JSON.parse(data);
+        msg = messageObj.msg;
+        username = messageObj.username;
+        file = messageObj.file;
+        //TODO
+        sendTo = messageObj.writingToList == "" ? [] : messageObj.writingToList;
         $('.loader').css("display", "none");
         //create String for tooltip
         var sendToList = "";
@@ -172,7 +178,9 @@ $(document).ready(function() {
         alert("This username already exists!")
     });
 
-    socket.on('userJoint', function(username, picture) {
+    socket.on('userJoint', function (data) {
+        username = JSON.parse(data).username;
+        picture = JSON.parse(data).picture;
         $("#onlineList").append(`<li class=${username} ><img src=${picture} class="profilePic" ><button onclick="addToWritingList('${username}')" > ${username} </button></li>`);
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });

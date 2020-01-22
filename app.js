@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 const database = require('./db');
 var rediscfg = require('./redisDb');
 const bcrypt = require('bcryptjs');
+var bodyParser = require('body-parser');
 
 var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "localhost:" + port;
 const SECRET = 'udontknow';
@@ -34,7 +35,9 @@ var session = expressSession({
     saveUninitialized: true, 
     secret: SECRET })
 
-    
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser(SECRET));
 app.use(session);
     
@@ -44,10 +47,12 @@ io.use(socketIOExpressSession(session)); // session support
 //Creating pub and sub
 var sub = redis.createClient(redisLogin);
 var pub = redis.createClient(redisLogin);
-sub.subscribe('chat');
+sub.subscribe('chat message');
+sub.subscribe('userLeft');
+sub.subscribe('userJoint');
 
 app.enable('trust proxy');
-
+/*
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
@@ -57,7 +62,7 @@ app.enable('trust proxy');
             res.redirect('https://' + req.headers.host + req.url);
     }
 });
-
+*/
 //Security
 app.use(helmet());
 
@@ -83,7 +88,8 @@ io.on('connection', function(socket){
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
         profilePictures.delete(socket.username);
-        socket.broadcast.emit('userLeft', socket.username) // to all others
+        //socket.broadcast.emit('userLeft', socket.username) // to all others
+        pub.publish('userLeft', String(socket.username));
     });
 
     socket.on('chat message', function (msg, file, writingToList, translate) {
@@ -125,8 +131,9 @@ io.on('connection', function(socket){
                         var uoList = Array.from(usersOnline.keys());
                         uoList.splice(uoList.indexOf(socket.username), 1)
                         socket.emit('validLogin', uoList, Array.from(profilePictures));
-                        socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
-                        pub.publish('chat', username);
+                        var data = { "username": username, "picture": result[0].PIC };
+                        //socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
+                        pub.publish('userJoint', JSON.stringify(data));
                     } else {
                         socket.emit('invalidLogin');
                     }
@@ -153,10 +160,7 @@ io.on('connection', function(socket){
                 socket.emit('alertMsg', "This user already exists")                            
             }else{
                 signUpData[0] = signUpData[0].toLowerCase();
-                console.log(result[2].pw);
-                console.log(signUpData[1]);
                 signUpData[1] = result[2].pw;
-                console.log(signUpData[1]);
                 database.dataQuery("INSERT INTO USERS (USERNAME,PASSWORD,EMAIL,PIC) VALUES ( ?, ?, ?, ? );", signUpData).then(function(result){
                     socket.emit('signUpSuccess') ;                           
                 })
@@ -164,8 +168,8 @@ io.on('connection', function(socket){
         });
     });
 
-    sub.on('message', function (channel, message) {
-        socket.emit(channel, message);
+    sub.on('message', function (channel, data) {
+        socket.emit(channel, data);
     });
 
 });
@@ -176,9 +180,6 @@ async function hashPassword(originalPw){
 
     //hash the password
     const hashPassword = await bcrypt.hash(originalPw, salt);
-    
-    console.log(salt);
-
     return {
         pw: hashPassword
     }
@@ -195,7 +196,8 @@ function sendMessage(writingToList, msg, socket, file) {
     }
     else {
         io.emit('chat message', msg, socket.username, file, writingToList);
-        pub.publish('chat', msg);
+        data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
+        pub.publish('chat message', JSON.stringify(data));
     }
 }
 
