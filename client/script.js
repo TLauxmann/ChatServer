@@ -55,7 +55,6 @@ $(document).ready(function() {
 
     //recieve message and check for file   
     socket.on('chat message', function (data) {
-        console.log(data);
         var messageObj = JSON.parse(data);
         msg = messageObj.msg;
         username = messageObj.username;

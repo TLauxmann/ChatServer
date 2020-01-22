@@ -173,16 +173,13 @@ io.on('connection', function(socket){
     });
 
     sub.on('message', function (channel, data) {
-        console.log(channel);
         if (channel == 'chat message' && JSON.parse(data).writingToList != ""){
-            console.log("to choosen");
             JSON.parse(JSON.parse(data).writingToList)[0].forEach(function (username) {
                 io.to(usersOnline.get(username)).emit('chat message', data);
             });
             //and to yourself
             io.to(socket.id).emit('chat message', data);
         }else{
-            console.log("to all");
             socket.emit(channel, data);            
         }
 
@@ -192,6 +189,7 @@ io.on('connection', function(socket){
                 if(!usersOnline.has(jointObj.username)){
                     usersOnline.set(jointObj.username, jointObj.socketId);
                     profilePictures.set(jointObj.username, jointObj.picture);
+                    console.log("user joint: " + Array.from(usersOnline.keys()));
                 }
             }
         }else if(channel == 'userLeft'){
@@ -200,6 +198,7 @@ io.on('connection', function(socket){
                 if (usersOnline.has(leftObj.username)) {
                     usersOnline.delete(leftObj.username);
                     profilePictures.delete(leftObj.username);
+                    console.log("user left: " + Array.from(usersOnline.keys()));
                 }
             }
         }
@@ -220,11 +219,16 @@ async function hashPassword(originalPw){
 
 function sendMessage(writingToList, msg, socket, file) {
     if (writingToList.length) {
-        data = { "msg": msg, "username": socket.username, "file": file, "writingToList": JSON.stringify(Array.of(writingToList)) }
+        //send to selected users
+        writingToList.forEach(function (username) {
+            io.to(usersOnline.get(username)).emit('chat message', msg, socket.username, file, writingToList);
+        });
+        //and to yourself
+        io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
     } else {
         data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
+        pub.publish('chat message', JSON.stringify(data));
     }
-    pub.publish('chat message', JSON.stringify(data));
 }
 
     async function translateMessage(incomingMessage){
