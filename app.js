@@ -10,6 +10,7 @@ var rediscfg = require('./redisDb');
 const bcrypt = require('bcryptjs');
 
 var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "localhost:" + port;
+const SECRET = 'udontknow';
 
 //redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
 //needed for multiple instances
@@ -28,15 +29,16 @@ var sessionStore = new RedisStore({client: rClient});
 var session = expressSession({
     store: sessionStore,
     key: 'JSESSIONID', 
-    resave: false, 
-    saveUninitialized: false, 
-    secret: 'u dont know' })
+    resave: true, 
+    saveUninitialized: true, 
+    secret: SECRET })
+
+    
+app.use(cookieParser(SECRET));
+app.use(session);
     
 var socketIOExpressSession = require('socket.io-express-session');
 io.use(socketIOExpressSession(app.session)); // session support
-
-app.use(cookieParser('u dont know'));
-app.use(session);
 
 app.enable('trust proxy');
 
