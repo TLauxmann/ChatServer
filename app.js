@@ -120,27 +120,31 @@ io.on('connection', function(socket){
             username = "Robin F";
         }
         database.dataQuery("SELECT * FROM users WHERE USERNAME = ? ;", [username.toLowerCase()]).then(function(result){
-            //compare password with hashed db pw
-            bcrypt.compare(password, result[0].PASSWORD).then(function(compared){
-                if (result && result.length > 0 && compared){
-                    if (!usersOnline.has(username)) {
-                        socket.username = username;
-                        usersOnline.set(username, socket.id);
-                        profilePictures.set(username, result[0].PIC)
-                        //remove own name
-                        var uoList = Array.from(usersOnline.keys());
-                        uoList.splice(uoList.indexOf(socket.username), 1)
-                        socket.emit('validLogin', uoList, Array.from(profilePictures));
-                        var data = { "username": username, "picture": result[0].PIC, "socketId": String(socket.id) };
-                        //socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
-                        pub.publish('userJoint', JSON.stringify(data));
-                    } else {
-                        socket.emit('invalidLogin');
-                    }
-                }else{
-                    socket.emit('alertMsg', "Wrong username or password")                            
-                }
-            });
+            if (result && result.length > 0){
+                //compare password with hashed db pw
+                    bcrypt.compare(password, result[0].PASSWORD).then(function (compared) {
+                        if(compared){
+                            if (!usersOnline.has(username)) {
+                                socket.username = username;
+                                usersOnline.set(username, socket.id);
+                                profilePictures.set(username, result[0].PIC)
+                                //remove own name
+                                var uoList = Array.from(usersOnline.keys());
+                                uoList.splice(uoList.indexOf(socket.username), 1)
+                                socket.emit('validLogin', uoList, Array.from(profilePictures));
+                                var data = { "username": username, "picture": result[0].PIC, "socketId": String(socket.id) };
+                                //socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
+                                pub.publish('userJoint', JSON.stringify(data));
+                            } else {
+                                socket.emit('invalidLogin');
+                            }
+                        }else{
+                            socket.emit('alertMsg', "Wrong password")    
+                        }
+                });
+            }else{
+                socket.emit('alertMsg', "Wrong username")                            
+            }
         });
     });
 
@@ -169,18 +173,34 @@ io.on('connection', function(socket){
     });
 
     sub.on('message', function (channel, data) {
-        socket.emit(channel, data);
+        console.log(channel);
+        if (channel == 'chat message' && JSON.parse(data).writingToList != ""){
+            console.log("to choosen");
+            JSON.parse(JSON.parse(data).writingToList)[0].forEach(function (username) {
+                io.to(usersOnline.get(username)).emit('chat message', data);
+            });
+            //and to yourself
+            io.to(socket.id).emit('chat message', data);
+        }else{
+            console.log("to all");
+            socket.emit(channel, data);            
+        }
+
         if (channel == 'userJoint'){
-            var jointObj = JSON.parse(data);
-            if(!usersOnline.has(jointObj.username)){
-                usersOnline.set(jointObj.username, jointObj.socketId);
-                profilePictures.set(jointObj.username, jointObj.picture);
+            if (data && data != 'undefined'){
+                var jointObj = JSON.parse(data);
+                if(!usersOnline.has(jointObj.username)){
+                    usersOnline.set(jointObj.username, jointObj.socketId);
+                    profilePictures.set(jointObj.username, jointObj.picture);
+                }
             }
         }else if(channel == 'userLeft'){
-            var leftObj = JSON.parse(data);
-            if (usersOnline.has(leftObj.username)) {
-                usersOnline.delete(leftObj.username);
-                profilePictures.delete(leftObj.username);
+            if (data && data != 'undefined'){
+                var leftObj = JSON.parse(data);
+                if (usersOnline.has(leftObj.username)) {
+                    usersOnline.delete(leftObj.username);
+                    profilePictures.delete(leftObj.username);
+                }
             }
         }
     });
@@ -200,17 +220,11 @@ async function hashPassword(originalPw){
 
 function sendMessage(writingToList, msg, socket, file) {
     if (writingToList.length) {
-        //send to selected users
-        writingToList.forEach(function (username) {
-            io.to(usersOnline.get(username)).emit('chat message', msg, socket.username, file, writingToList);
-        });
-        //and to yourself
-        io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
+        data = { "msg": msg, "username": socket.username, "file": file, "writingToList": JSON.stringify(Array.of(writingToList)) }
     } else {
-        io.emit('chat message', msg, socket.username, file, writingToList);
         data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
-        pub.publish('chat message', JSON.stringify(data));
     }
+    pub.publish('chat message', JSON.stringify(data));
 }
 
     async function translateMessage(incomingMessage){
