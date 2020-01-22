@@ -89,7 +89,7 @@ io.on('connection', function(socket){
         usersOnline.delete(socket.username);
         profilePictures.delete(socket.username);
         //socket.broadcast.emit('userLeft', socket.username) // to all others
-        data = { "username": String(socket.username) };
+        data = { "username": socket.username };
         pub.publish('userLeft', JSON.stringify(data));
     });
 
