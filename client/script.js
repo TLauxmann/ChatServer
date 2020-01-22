@@ -185,10 +185,10 @@ $(document).ready(function() {
         $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " joint the chatroom"));
     });
 
-    socket.on('userLeft', function(username) {
-        var listClass = $("." + username);
+    socket.on('userLeft', function(data) {
+        var listClass = $("." + JSON.parse(data).username);
         listClass[0].remove();
-        $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + username + " left the chatroom"));
+        $('#messages').append($('<li class=userJointLeft >').text(getCurrentTimestamp() + " " + JSON.parse(data).username + " left the chatroom"));
     });
 
     socket.on('serverName', function(serverName){

@@ -13,7 +13,6 @@ var bodyParser = require('body-parser');
 var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "localhost:" + port;
 const SECRET = 'udontknow';
 
-//redis trial based on https://www.cloudfoundry.org/blog/scaling-real-time-apps-on-cloud-foundry-using-node-js-and-redis/
 //needed for multiple instances
 var cookieParser = require('cookie-parser')
 var expressSession = require("express-session");
@@ -51,8 +50,9 @@ sub.subscribe('chat message');
 sub.subscribe('userLeft');
 sub.subscribe('userJoint');
 
+//start Security
 app.enable('trust proxy');
-/*
+
    app.use (function (req, res, next) {
     if (req.secure) {
             // request was via https, so do no special handling
@@ -62,12 +62,11 @@ app.enable('trust proxy');
             res.redirect('https://' + req.headers.host + req.url);
     }
 });
-*/
-//Security
 app.use(helmet());
+//Security end
 
-app.use('/client', express.static(__dirname + '/client'));
 //start - express, html config
+app.use('/client', express.static(__dirname + '/client'));
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html');
 });
@@ -80,7 +79,7 @@ http.listen(port, () => {
 var usersOnline = new Map();
 var profilePictures = new Map();
 
-//sessionSockets.on('connection', function(err, socket, session) {
+
 io.on('connection', function(socket){
 
     socket.emit('serverName', serverName);
@@ -88,8 +87,8 @@ io.on('connection', function(socket){
     socket.on('disconnect', function() {
         usersOnline.delete(socket.username);
         profilePictures.delete(socket.username);
-        //socket.broadcast.emit('userLeft', socket.username) // to all others
         data = { "username": socket.username };
+
         pub.publish('userLeft', JSON.stringify(data));
     });
 
@@ -134,7 +133,7 @@ io.on('connection', function(socket){
                                 uoList.splice(uoList.indexOf(socket.username), 1)
                                 socket.emit('validLogin', uoList, Array.from(profilePictures));
                                 var data = { "username": username, "picture": result[0].PIC, "socketId": String(socket.id) };
-                                //socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
+
                                 pub.publish('userJoint', JSON.stringify(data));
                             } else {
                                 socket.emit('invalidLogin');
@@ -176,10 +175,10 @@ io.on('connection', function(socket){
     sub.on('message', function (channel, data) {
         if (channel == 'chat message' && JSON.parse(data).writingToList != ""){
             JSON.parse(JSON.parse(data).writingToList)[0].forEach(function (username) {
-                io.to(usersOnline.get(username)).emit('chat message', data);
+                if(usersOnline.get(username) == socket.id){
+                    socket.emit('chat message', data);
+                }
             });
-            //and to yourself
-            io.to(socket.id).emit('chat message', data);
         }else{
             socket.emit(channel, data);            
         }
@@ -190,7 +189,6 @@ io.on('connection', function(socket){
                 if(!usersOnline.has(jointObj.username)){
                     usersOnline.set(jointObj.username, jointObj.socketId);
                     profilePictures.set(jointObj.username, jointObj.picture);
-                    console.log("user joint: " + Array.from(usersOnline.keys()));
                 }
             }
         }else if(channel == 'userLeft'){
@@ -199,7 +197,6 @@ io.on('connection', function(socket){
                 if (usersOnline.has(leftObj.username)) {
                     usersOnline.delete(leftObj.username);
                     profilePictures.delete(leftObj.username);
-                    console.log("user left: " + Array.from(usersOnline.keys()));
                 }
             }
         }
@@ -220,17 +217,12 @@ async function hashPassword(originalPw){
 
 function sendMessage(writingToList, msg, socket, file) {
     if (writingToList.length) {
+        writingToList.push(socket.username)
         data = { "msg": msg, "username": socket.username, "file": file, "writingToList": JSON.stringify(Array.of(writingToList)) }
-        //send to selected users
-        writingToList.forEach(function (username) {
-            io.to(usersOnline.get(username)).emit('chat message', JSON.stringify(data));
-        });
-        //and to yourself
-        io.to(socket.id).emit('chat message', JSON.stringify(data));
     } else {
         data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
-        pub.publish('chat message', JSON.stringify(data));
     }
+    pub.publish('chat message', JSON.stringify(data));
 }
 
     async function translateMessage(incomingMessage){
