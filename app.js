@@ -89,7 +89,8 @@ io.on('connection', function(socket){
         usersOnline.delete(socket.username);
         profilePictures.delete(socket.username);
         //socket.broadcast.emit('userLeft', socket.username) // to all others
-        pub.publish('userLeft', String(socket.username));
+        data = { "username": String(socket.username) };
+        pub.publish('userLeft', JSON.stringify(data));
     });
 
     socket.on('chat message', function (msg, file, writingToList, translate) {
@@ -186,7 +187,6 @@ io.on('connection', function(socket){
         if (channel == 'userJoint'){
             if (data && data != 'undefined'){
                 var jointObj = JSON.parse(data);
-                console.log("joint " + jointObj.username);
                 if(!usersOnline.has(jointObj.username)){
                     usersOnline.set(jointObj.username, jointObj.socketId);
                     profilePictures.set(jointObj.username, jointObj.picture);
@@ -196,7 +196,6 @@ io.on('connection', function(socket){
         }else if(channel == 'userLeft'){
             if (data && data != 'undefined'){
                 var leftObj = JSON.parse(data);
-                console.log("left " + leftObj.username);
                 if (usersOnline.has(leftObj.username)) {
                     usersOnline.delete(leftObj.username);
                     profilePictures.delete(leftObj.username);
@@ -224,10 +223,10 @@ function sendMessage(writingToList, msg, socket, file) {
         data = { "msg": msg, "username": socket.username, "file": file, "writingToList": JSON.stringify(Array.of(writingToList)) }
         //send to selected users
         writingToList.forEach(function (username) {
-            io.to(usersOnline.get(username)).emit('chat message', data);
+            io.to(usersOnline.get(username)).emit('chat message', JSON.stringify(data));
         });
         //and to yourself
-        io.to(socket.id).emit('chat message', data);
+        io.to(socket.id).emit('chat message', JSON.stringify(data));
     } else {
         data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
         pub.publish('chat message', JSON.stringify(data));
