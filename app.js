@@ -38,7 +38,7 @@ app.use(cookieParser(SECRET));
 app.use(session);
     
 var socketIOExpressSession = require('socket.io-express-session');
-io.use(socketIOExpressSession(app.session)); // session support
+io.use(socketIOExpressSession(session)); // session support
 
 app.enable('trust proxy');
 
