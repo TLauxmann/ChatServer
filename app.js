@@ -131,7 +131,7 @@ io.on('connection', function(socket){
                         var uoList = Array.from(usersOnline.keys());
                         uoList.splice(uoList.indexOf(socket.username), 1)
                         socket.emit('validLogin', uoList, Array.from(profilePictures));
-                        var data = { "username": username, "picture": result[0].PIC };
+                        var data = { "username": username, "picture": result[0].PIC, "socketId": String(socket.id) };
                         //socket.broadcast.emit('userJoint', username, result[0].PIC) // to all others
                         pub.publish('userJoint', JSON.stringify(data));
                     } else {
@@ -170,6 +170,19 @@ io.on('connection', function(socket){
 
     sub.on('message', function (channel, data) {
         socket.emit(channel, data);
+        if (channel == 'userJoint'){
+            var jointObj = JSON.parse(data);
+            if(!usersOnline.has(jointObj.username)){
+                usersOnline.set(jointObj.username, jointObj.socketId);
+                profilePictures.set(jointObj.username, jointObj.picture);
+            }
+        }else if(channel == 'userLeft'){
+            var leftObj = JSON.parse(data);
+            if (usersOnline.has(leftObj.username)) {
+                usersOnline.delete(leftObj.username);
+                profilePictures.delete(leftObj.username);
+            }
+        }
     });
 
 });
@@ -193,8 +206,7 @@ function sendMessage(writingToList, msg, socket, file) {
         });
         //and to yourself
         io.to(socket.id).emit('chat message', msg, socket.username, file, writingToList);
-    }
-    else {
+    } else {
         io.emit('chat message', msg, socket.username, file, writingToList);
         data = {"msg": msg, "username": socket.username, "file": file, "writingToList": ""}
         pub.publish('chat message', JSON.stringify(data));
