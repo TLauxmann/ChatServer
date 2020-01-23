@@ -10,7 +10,7 @@ var rediscfg = require('./redisDb');
 const bcrypt = require('bcryptjs');
 var bodyParser = require('body-parser');
 
-var serverName = process.env.CF_INSTANCE_ADDR ? process.env.CF_INSTANCE_ADDR : "localhost:" + port;
+var serverName = process.env ? process.env : "localhost:" + port;
 const SECRET = 'udontknow';
 
 //needed for multiple instances
